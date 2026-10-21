@@ -52,7 +52,7 @@ sub-XXX/
 ├── sub-XXX_ses-1_task-EyesClosed_acq-post_eeg.edf
 ├── sub-XXX_ses-1_task-EyesOpen_acq-pre_eeg.edf
 └── sub-XXX_ses-1_task-EyesOpen_acq-post_eeg.edf
-
+```
 ---
 
 ## Installation
@@ -62,15 +62,15 @@ sub-XXX/
 - [Git](https://git-scm.com/) and [Git-Annex](https://git-annex.branchable.com/) (recommended for DataLad dataset management)
 
 ### Setup
-bash
+```bash
 # Clone the validator repository
 git clone https://github.com/<your-username>/dortmund-vital-eeg-validator.git
 cd dortmund-vital-eeg-validator
-
+```
 # Create and activate virtual environment
-python -m venv .venv
+```python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
+```
 # Install dependencies
 pip install -r requirements.txt
 
@@ -91,15 +91,15 @@ colorama>=0.4.6
 
 ### 1. Single Subject Analysis
 Run full QC on a single participant:
-bash
+```bash
 python validator.py --subjects 28
-
+```
 ### 2. Multi-Subject & Range Processing
 Process sequential ranges, individual subjects, or mixed selections:
-bash
+```bash
 # Range of subjects
 python validator.py --subjects 1 to 20
-
+```
 # Mixed selection
 python validator.py --subjects 5 12 28 35 to 40
 
@@ -122,7 +122,7 @@ python validator.py --subjects 5 12 28 35 to 40
 
 Results are systematically structured inside `qc_output/`:
 
-text
+```text
 qc_output/
 ├── summary_all_subjects.csv        # Aggregated triage status across all analyzed subjects
 ├── sub-028/
@@ -146,6 +146,7 @@ qc_output/
 │           └── run_level_summary.csv
 
 ---
+```
 
 ## Example Case Study: Participant 28
 

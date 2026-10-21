@@ -48,7 +48,8 @@ Screening rules (all thresholds are in CONFIG below)
 Where the results go (default --out-root qc_output)
 ---------------------------------------------------
     qc_output/
-        summary_all_subjects.csv      one line per subject processed so far (updated by every run)
+        summary_all_subjects.xlsx     ALL subjects in one Excel file (sheets: Subjects, Recordings, Issues, Legend),
+        summary_all_subjects.csv      the same Subjects sheet as csv; both are updated after EVERY subject
         sub-018/
             status.txt                the whole story of this subject in plain text (also for rejected ones)
             status.json               the same, machine-readable
@@ -59,7 +60,9 @@ Where the results go (default --out-root qc_output)
     The channel quality topomap is  qc_results/figures/sub-<ID>_task-rest_channel_quality_topomap.png
 
 A problem in one subject never stops the others: it is written into that subject's status file.
-Press Ctrl+C to stop; everything that was finished stays saved.
+Press Ctrl+C (or lose the connection, or crash) at any time: every finished subject is already saved. Run the SAME
+command again and the finished subjects are skipped automatically; only the rest is done. If the download fails for
+3 subjects in a row the batch stops by itself (--stop-after-failures) and tells you how to continue.
 
 Other options
 -------------
@@ -67,13 +70,14 @@ Other options
     --no-download            use the EDF files that are already in the data folder (they are never deleted)
     --keep-data              do not delete the downloaded data after the analysis
     --force-reanalysis       analyse again even if results of the same QC version exist
+    --stop-after-failures N  stop after N subjects in a row whose download failed (default 3, 0 = never)
     --force-download         download again even if the files are on disk
     --verify-table FILE.tsv  compare the embedded participant table with your sheet (TSV) and exit
     --debug                  show the full traceback and stop at the first problem
 
 Requirements
 ------------
-    pip install "mne>=1.6" edfio numpy scipy pandas matplotlib
+    pip install "mne>=1.6" edfio numpy scipy pandas matplotlib openpyxl
     DataLad + git-annex (recommended; same as the manual workflow)
 
 Exit codes: 0 = everything finished, 1 = a technical problem (error, no data, Ctrl+C),
@@ -92,6 +96,7 @@ import os
 import platform
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import textwrap
@@ -289,7 +294,11 @@ CONFIG: dict[str, Any] = {
     "global_frozen_fail_fraction": 0.10, # more than 10% of the recording frozen = FAIL
 
     # ---- 2c) spatial correlation (channels that are neither flat nor clipped, but unrelated to all the others) ----
-    "corr_threshold": 0.25,              # |Pearson r| with the median of all channels below this = uncorrelated / noisy channel
+    "corr_threshold": 0.20,              # |Pearson r| with the median of all channels below this = uncorrelated / noisy channel
+    # Occipital alpha (Eyes Closed) is very local, so O1/O2/Oz share less signal with the rest of the head. A strong
+    # healthy alpha must not make them look "uncorrelated" (a false FAIL), hence a slightly more tolerant threshold:
+    "corr_relaxed_channels": ["O1", "O2", "Oz"],
+    "corr_threshold_relaxed": 0.18,      # threshold used for the channels listed above
     "corr_window_s": 5.0,                # r is computed per 5-s window; the channel's value is the median over windows
     "corr_band_hz": (1.0, 45.0),         # band used for the correlation (removes drift and the 50 Hz line)
     "corr_target_fs_hz": 125.0,          # the band-passed signal is down-sampled to about this rate (speed)
@@ -333,7 +342,7 @@ CONFIG: dict[str, Any] = {
     "notch_suggested_db": 10.0,          # info only: above 10 dB a notch filter is suggested for preprocessing
 }
 
-QC_LOGIC_VERSION = "screening-2.1"        # change this text whenever the QC logic changes (invalidates old results)
+QC_LOGIC_VERSION = "screening-2.2"        # change this text whenever the QC logic changes (invalidates old results)
 
 
 def qc_signature(dataset_version: str) -> str:
@@ -1239,12 +1248,16 @@ def _warn_absent(absent: list[str]) -> None:
              + ", ".join(_short_rec(r) for r in absent))
 
 
-def _run_quiet(cmd: list[str], cwd: Path | None = None) -> tuple[int, str]:
-    """Run a command WITHOUT showing its (noisy) output. Returns (exit code, last lines of the output)."""
+def _run_quiet(cmd: list[str], cwd: Path | None = None, timeout: float | None = None) -> tuple[int, str]:
+    """Run a command WITHOUT showing its (noisy) output. Returns (exit code, last lines of the output). Never raises."""
     try:
-        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+        r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError:
         return 127, f"command not found: {cmd[0]}"
+    except subprocess.TimeoutExpired:
+        return 124, f"timed out after {timeout} s"
+    except OSError as e:                                   # e.g. PermissionError: the program cannot be started
+        return 126, f"{type(e).__name__}: {e}"
     tail = "\n".join((r.stdout + r.stderr).strip().splitlines()[-6:])
     return r.returncode, tail
 
@@ -1346,6 +1359,11 @@ def fetch_data(sub: str, sessions: list[str], data_dir: Path, repo_dir: Path,
                             "downloaded": [], "already_present": [], "not_in_dataset": [], "failed": []}
     min_bytes = CONFIG["edf_min_size_mb"] * 1e6
     wanted = wanted_files(sub, sessions)
+    try:                                                    # half-copied files of an interrupted run
+        for stale in (data_dir / sub).rglob("*.part"):
+            stale.unlink()
+    except OSError:
+        pass
 
     def have(kind: str, rel: str) -> bool:
         p = data_dir / rel
@@ -1527,6 +1545,10 @@ class Recording:
         if self._dt is None:
             self._dt = detrend_signal(self.data_uv, self.sfreq)
         return self._dt
+
+    def release_dt(self) -> None:
+        """Free the baseline-corrected copy (a full-size array) as soon as the statistics are done."""
+        self._dt = None
 
     @property
     def n_times(self) -> int:
@@ -1745,6 +1767,13 @@ def detrend_signal(x: np.ndarray, fs: float) -> np.ndarray:
     return signal.sosfiltfilt(sos, xm, axis=1)
 
 
+def corr_thresholds(ch_names: list[str]) -> np.ndarray:
+    """Threshold of every channel for the spatial-correlation criterion (more tolerant for O1/O2/Oz)."""
+    relaxed = {_norm_name(k) for k in CONFIG["corr_relaxed_channels"]}
+    return np.array([CONFIG["corr_threshold_relaxed"] if _norm_name(n) in relaxed else CONFIG["corr_threshold"]
+                     for n in ch_names], dtype=float)
+
+
 def spatial_correlation(rec: Recording) -> dict[str, Any]:
     """|Pearson r| of every channel with the MEDIAN of all channels, in 5-s windows (band 1-45 Hz).
 
@@ -1760,7 +1789,9 @@ def spatial_correlation(rec: Recording) -> dict[str, Any]:
     lo, hi = c["corr_band_hz"]
     hi = min(hi, 0.45 * fs)
     sos = signal.butter(4, [lo, hi], btype="bandpass", fs=fs, output="sos")
-    y = signal.sosfiltfilt(sos, rec.data_dt, axis=1)[:, ::q]       # band-passed, then down-sampled (hi < new Nyquist)
+    y_full = signal.sosfiltfilt(sos, rec.data_dt, axis=1)          # band-passed (full size, freed right below)
+    y = np.ascontiguousarray(y_full[:, ::q])                        # down-sampled (hi < new Nyquist); a real copy, not a view
+    del y_full
     fs_y = fs / q
     n_ch, n = y.shape
     w = int(round(c["corr_window_s"] * fs_y))
@@ -1774,8 +1805,9 @@ def spatial_correlation(rec: Recording) -> dict[str, Any]:
     num = (sc * rc[None]).sum(axis=-1)
     den = np.sqrt((sc ** 2).sum(axis=-1)) * np.sqrt((rc ** 2).sum(axis=-1))[None]
     r = np.abs(np.divide(num, den, out=np.zeros_like(num), where=den > 0))
-    return {"median": np.median(r, axis=1), "low_frac": (r < c["corr_threshold"]).mean(axis=1),
-            "windows": r.astype(np.float32), "window_s": w / fs_y}
+    thr = corr_thresholds(rec.ch_names)
+    return {"median": np.median(r, axis=1), "low_frac": (r < thr[:, None]).mean(axis=1),
+            "windows": r.astype(np.float32), "window_s": w / fs_y, "thresholds": thr}
 
 
 def compute_channel_table(rec: Recording, corr: dict[str, Any] | None = None) -> pd.DataFrame:
@@ -1823,7 +1855,8 @@ def compute_channel_table(rec: Recording, corr: dict[str, Any] | None = None) ->
     df["noisy"] = ((~df["flat"]) & (~df["clipped"])
                    & (df["window_std_uv"] > np.maximum(c["noisy_ratio"] * med_win, c["noisy_min_uv"])))
     # spatial correlation: channels that are not flat/clipped but unrelated to all the others
-    df["corr_below_thr"] = (~df["flat"]) & (~df["clipped"]) & (df["corr_median"] < c["corr_threshold"])
+    df["corr_threshold_used"] = corr_thresholds(rec.ch_names)
+    df["corr_below_thr"] = (~df["flat"]) & (~df["clipped"]) & (df["corr_median"] < df["corr_threshold_used"])
     unreliable = bool(df["corr_below_thr"].mean() > c["corr_unreliable_fraction"])
     df["corr_ref_unreliable"] = unreliable                       # most channels below r: the reference itself is doubtful
     df["uncorrelated"] = df["corr_below_thr"] & (not unreliable)
@@ -1875,7 +1908,7 @@ def integrity_check(rec: Recording, ch_table: pd.DataFrame | None = None) -> dic
                                  code="USABLE_NEEDS_INTERPOLATION"))
     if bool(t["corr_ref_unreliable"].any()):
         share = float(t["corr_below_thr"].mean())
-        issues.append(make_issue("FLAG", "spatial_correlation_reference_unreliable", f"{share:.0%} of channels below r={c['corr_threshold']}",
+        issues.append(make_issue("FLAG", "spatial_correlation_reference_unreliable", f"{share:.0%} of channels below their r threshold ({c['corr_threshold']}; {c['corr_threshold_relaxed']} for O1/O2/Oz)",
                                  f"at most {c['corr_unreliable_fraction']:.0%} of channels below the threshold "
                                  "(otherwise the correlation criterion is not applied)", code="LOW_GLOBAL_SPATIAL_CORRELATION"))
 
@@ -2175,17 +2208,20 @@ def analyse_recording(data_dir: Path, rec: Recording) -> dict[str, Any]:
     """
     paths = recording_paths(data_dir, rec.sub, rec.ses, rec.task, rec.acq)
     sidecar, sidecar_error = read_sidecar(paths["json"])
-    corr = spatial_correlation(rec)                                    # also creates the baseline-corrected copy
-    ch = compute_channel_table(rec, corr)
+    n, fs = rec.n_times, rec.sfreq
+    a = int(max(0, n // 2 - 3 * fs))
+    try:
+        corr = spatial_correlation(rec)                                # also creates the baseline-corrected copy
+        ch = compute_channel_table(rec, corr)
+        excerpt = rec.data_dt[:, a:a + int(6 * fs)].astype(np.float32)   # 6 s from the middle: a real (small) copy
+    finally:
+        rec.release_dt()                                               # free the big copy NOW, whatever happened
+        gc.collect()
     psd = compute_psd(rec)
     ch = pd.concat([ch, channel_spectral_table(psd)], axis=1)          # same channel order, so concat by position
     layers = {"header": header_check(rec, sidecar, sidecar_error),
               "integrity": integrity_check(rec, ch),
               "amplitude": amplitude_check(rec, ch)}
-    n, fs = rec.n_times, rec.sfreq
-    a = int(max(0, n // 2 - 3 * fs))
-    seg = rec.data_dt[:, a:a + int(6 * fs)]                            # 6 s from the middle, baseline-corrected
-    excerpt = seg.astype(np.float32)                                   # (the median is already removed)
 
     # whole recording on the occipital channels (down-sampled for display) + frozen segments, for figure F
     traces = {}
@@ -2918,7 +2954,7 @@ def plot_channel_quality_topomap(st: QCState, df_rec: pd.DataFrame, df_channels:
                  fontsize=12.5, y=0.995)
     fig.text(0.5, 0.075,
              f"Yellow: typical 1-s STD > {c['noisy_ratio']:.0f}x the median and > {c['noisy_min_uv']:.0f} uV, or |r| with the median of all "
-             f"channels < {c['corr_threshold']}.   Orange: 50 Hz > {c['line_flag_db']:.0f} dB above its flanks, or |drift| > "
+             f"channels < {c['corr_threshold']} ({c['corr_threshold_relaxed']} for O1/O2/Oz).   Orange: 50 Hz > {c['line_flag_db']:.0f} dB above its flanks, or |drift| > "
              f"{c['drift_info_uv']:.0f} uV.   Red: flat (STD < {c['flat_std_uv']} uV) or clipped.",
              ha="center", fontsize=8, color="0.3")
     if missing:
@@ -2942,6 +2978,7 @@ def plot_spatial_correlation(st: QCState, df_channels: pd.DataFrame, sub: str, f
         return
     thr = CONFIG["corr_threshold"]
     order = list(dict.fromkeys(d["channel"]))
+    thr_order = corr_thresholds(order)
     combos = sorted(set(zip(d["session"], d["task"], d["acq"])), key=lambda c: (c[0], TASKS.index(c[1]), ACQS.index(c[2])))
     labels = [f"{s.replace('ses-', 's')}-{'EC' if t == 'EyesClosed' else 'EO'}-{a}" for s, t, a in combos]
     r_tab = d.pivot_table(index="channel", columns=["session", "task", "acq"], values="corr_median",
@@ -2957,9 +2994,9 @@ def plot_spatial_correlation(st: QCState, df_channels: pd.DataFrame, sub: str, f
     ax1, ax2, ax3, cax = (fig.add_subplot(gs[0, i]) for i in range(4))
 
     im = ax1.imshow(rv, aspect="auto", cmap="viridis", vmin=0, vmax=1)
-    yy, xx = np.where(rv < thr)
+    yy, xx = np.where(rv < thr_order[:, None])
     if len(yy):
-        ax1.scatter(xx, yy, marker="x", color="red", s=34, label=f"|r| < {thr}")
+        ax1.scatter(xx, yy, marker="x", color="red", s=34, label="|r| below the channel's threshold")
         ax1.legend(loc="upper right", fontsize=7)
     ax1.set_xticks(range(len(combos)))
     ax1.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
@@ -2972,7 +3009,9 @@ def plot_spatial_correlation(st: QCState, df_channels: pd.DataFrame, sub: str, f
     colors = ["0.6" if (t["flat"].iloc[i] or t["clipped"].iloc[i]) else ("#d62728" if t["uncorrelated"].iloc[i] else "#4c78a8")
               for i in srt]
     ax2.barh(np.arange(n_ch), vals[srt], color=colors)
-    ax2.axvline(thr, color="k", ls="--", lw=1.0, label=f"threshold {thr}")
+    ax2.axvline(thr, color="k", ls="--", lw=0.8, label=f"threshold {thr}")
+    ax2.scatter(t["corr_threshold_used"].to_numpy(dtype=float)[srt], np.arange(n_ch), marker="|", color="k", s=55, zorder=4,
+                label=f"own threshold ({CONFIG['corr_threshold_relaxed']} for O1/O2/Oz)")
     ax2.set_yticks(np.arange(n_ch))
     ax2.set_yticklabels([names[i] for i in srt], fontsize=6)
     ax2.set_xlim(0, 1)
@@ -2989,7 +3028,8 @@ def plot_spatial_correlation(st: QCState, df_channels: pd.DataFrame, sub: str, f
     fig.colorbar(im, cax=cax, label="|Pearson r| with the median of all channels")
     fig.suptitle(f"{sub}: spatial correlation of every channel with the median of all channels "
                  f"(baseline-corrected, {CONFIG['corr_band_hz'][0]:.0f}-{CONFIG['corr_band_hz'][1]:.0f} Hz). "
-                 f"Channels below |r| = {thr} are counted as bad (uncorrelated / noisy).", fontsize=11, y=0.985)
+                 f"Channels below |r| = {thr} ({CONFIG['corr_threshold_relaxed']} for O1/O2/Oz) are counted as bad (uncorrelated / noisy).",
+                 fontsize=11, y=0.985)
     fig.savefig(fig_dir / f"G_spatial_correlation_{sub}.png", dpi=130, bbox_inches="tight")
 
 
@@ -3072,7 +3112,7 @@ def key_finding_lines(df_rec: pd.DataFrame, df_ch: pd.DataFrame) -> list[str]:
             out.append("No channel was flagged as flat, clipped, noisy or uncorrelated.")
         n_unc = int((pd.to_numeric(df_rec["n_uncorrelated"], errors="coerce").fillna(0) > 0).sum())
         if n_unc:
-            out.append(f"Spatially uncorrelated channels (|r| < {CONFIG['corr_threshold']}) in {n_unc} recording(s)")
+            out.append(f"Spatially uncorrelated channels (|r| < {CONFIG['corr_threshold']}; {CONFIG['corr_threshold_relaxed']} for O1/O2/Oz) in {n_unc} recording(s)")
         n_crit = int((pd.to_numeric(df_rec["n_critical_bad"], errors="coerce").fillna(0) > 0).sum())
         if n_crit:
             names = sorted({c for s in df_rec["critical_bad_channels"] for c in str(s).split(", ") if c})
@@ -3237,19 +3277,48 @@ def write_manifest(out_dir: Path, args: argparse.Namespace, sub: str, row: dict[
 # MAIN
 # ======================================================================
 class Tee:
-    """Send everything that is printed to the screen AND (without colours) to run_log.txt."""
+    """Send everything that is printed to the screen AND (without colours) to a log file.
 
-    def __init__(self, console, log) -> None:
+    The log file can be attached and detached at any time (set_log). Writing NEVER raises: once the log file is closed
+    or detached, text only goes to the screen. This matters because other libraries (for example colorama's exit
+    handler) may keep a reference to this object and write to it when Python exits."""
+
+    def __init__(self, console, log=None) -> None:
         self.console, self.log = console, log
 
+    def set_log(self, log) -> None:
+        self.log = log
+
     def write(self, s: str) -> int:
-        self.console.write(s)
-        self.log.write(_ANSI_RE.sub("", s))
+        try:
+            self.console.write(s)
+        except (ValueError, OSError):                       # the screen itself is already closed (interpreter exit)
+            pass
+        log = self.log
+        if log is not None and not getattr(log, "closed", False):
+            try:
+                log.write(_ANSI_RE.sub("", s))
+            except (ValueError, OSError):                   # "I/O operation on closed file" and similar
+                pass
         return len(s)
 
     def flush(self) -> None:
-        self.console.flush()
-        self.log.flush()
+        try:
+            self.console.flush()
+        except (ValueError, OSError):
+            pass
+        log = self.log
+        if log is not None and not getattr(log, "closed", False):
+            try:
+                log.flush()
+            except (ValueError, OSError):
+                pass
+
+    def isatty(self) -> bool:
+        try:
+            return bool(self.console.isatty())
+        except (ValueError, OSError, AttributeError):
+            return False
 
     def __getattr__(self, name: str):
         return getattr(self.console, name)
@@ -3299,6 +3368,8 @@ def load_cached_status(subj_dir: Path, signature: str) -> tuple[dict[str, Any] |
         return None, "an unreadable status.json was found: the subject is analysed again"
     if s.get("status") != "COMPLETED":
         return None, None
+    if s.get("retry_needed"):
+        return None, "the download was incomplete last time: the subject is analysed again"
     needed = ["qc_results/df_recordings.csv", "qc_results/qc_report.txt", "qc_results/run_manifest.json"]
     if any(not (subj_dir / n).exists() for n in needed):
         return None, "earlier results are incomplete (files are missing): the subject is analysed again"
@@ -3307,46 +3378,109 @@ def load_cached_status(subj_dir: Path, signature: str) -> tuple[dict[str, Any] |
     return s, None
 
 
+def _force_unlink(p: Path) -> str | None:
+    """Delete a file. A read-only file (Windows / git-annex style) is made writable first.
+    Returns None on success, otherwise the error text (never raises)."""
+    try:
+        p.unlink()
+        return None
+    except FileNotFoundError:
+        return None
+    except PermissionError:
+        try:
+            os.chmod(p, stat.S_IWRITE | stat.S_IREAD)
+            p.unlink()
+            return None
+        except OSError as e:
+            return f"{type(e).__name__}: {e}"
+    except OSError as e:
+        return f"{type(e).__name__}: {e}"
+
+
+def _remove_quietly(p: Path) -> None:
+    """Remove an old output file. If it cannot be removed it is simply overwritten later."""
+    try:
+        p.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def cleanup_downloaded(sub: str, sessions: list[str], data_dir: Path, repo_dir: Path) -> dict[str, Any]:
-    """Free disk space after a successful analysis.
+    """Free disk space after a successful analysis. NEVER raises: every problem is returned in info["errors"].
 
     1. deletes the subject's EDF / json / events.tsv copies in the data folder (only those files, nothing else);
     2. drops the downloaded content from the DataLad clone ('datalad drop'): it can be fetched again from OpenNeuro.
+    PermissionError (Windows / WSL, locked or read-only git-annex files) only produces a warning; the files can be
+    removed later by hand.
     """
     info: dict[str, Any] = {"performed": True, "reason": "", "data_files_deleted": 0, "annex_files_dropped": 0,
                             "bytes_freed": 0, "errors": []}
     wanted = wanted_files(sub, sessions)
+
+    # 1) the data folder
     for _kind, rel in wanted:
         p = data_dir / rel
-        if p.is_file():
+        try:
+            if not p.is_file():
+                continue
+            size = p.stat().st_size
+        except OSError as e:
+            info["errors"].append(f"cannot access {p}: {type(e).__name__}: {e}")
+            continue
+        err = _force_unlink(p)
+        if err:
+            info["errors"].append(f"could not delete {p}: {err}")
+        else:
+            info["bytes_freed"] += size
+            info["data_files_deleted"] += 1
+
+    # 2) folders that are empty now
+    try:
+        sub_dir = data_dir / sub
+        if sub_dir.exists():
+            for d in sorted((q for q in sub_dir.rglob("*") if q.is_dir()), key=lambda q: len(q.parts), reverse=True):
+                try:
+                    d.rmdir()                              # only works when the folder is empty
+                except OSError:
+                    pass
             try:
-                size = p.stat().st_size
-                p.unlink()
-                info["bytes_freed"] += size
-                info["data_files_deleted"] += 1
-            except OSError as e:
-                info["errors"].append(f"could not delete {p}: {e}")
-    sub_dir = data_dir / sub
-    if sub_dir.exists():                                   # remove folders that are now empty
-        for d in sorted((q for q in sub_dir.rglob("*") if q.is_dir()), key=lambda q: len(q.parts), reverse=True):
-            try:
-                d.rmdir()
+                sub_dir.rmdir()
             except OSError:
                 pass
-        try:
-            sub_dir.rmdir()
-        except OSError:
-            pass
-    if (repo_dir / ".git").exists() and shutil.which("datalad"):
-        edfs = [rel for k, rel in wanted if k == "edf" and (repo_dir / rel).exists()]    # exists = content is present
-        if edfs:
-            sizes = {rel: (repo_dir / rel).stat().st_size for rel in edfs}
-            rc, tail = _run_quiet(["datalad", "drop", *edfs], cwd=repo_dir)
-            left = [rel for rel in edfs if (repo_dir / rel).exists()]
-            info["annex_files_dropped"] = len(edfs) - len(left)
-            info["bytes_freed"] += sum(sz for rel, sz in sizes.items() if rel not in left)
-            if left:
-                info["errors"].append(f"'datalad drop' could not remove {len(left)} file(s) (exit code {rc}): {tail.splitlines()[-1] if tail else ''}")
+    except OSError as e:
+        info["errors"].append(f"could not tidy {data_dir / sub}: {type(e).__name__}: {e}")
+
+    # 3) the DataLad / git-annex copy
+    try:
+        if (repo_dir / ".git").exists() and shutil.which("datalad"):
+            edfs: list[str] = []
+            sizes: dict[str, int] = {}
+            for kind, rel in wanted:
+                if kind != "edf":
+                    continue
+                try:
+                    if (repo_dir / rel).exists():          # exists = the annex content is present
+                        edfs.append(rel)
+                        sizes[rel] = (repo_dir / rel).stat().st_size
+                except OSError:
+                    continue
+            if edfs:
+                rc, tail = _run_quiet(["datalad", "drop", *edfs], cwd=repo_dir, timeout=600)
+                left = []
+                for rel in edfs:
+                    try:
+                        if (repo_dir / rel).exists():
+                            left.append(rel)
+                    except OSError:
+                        left.append(rel)
+                info["annex_files_dropped"] = len(edfs) - len(left)
+                info["bytes_freed"] += sum(sz for rel, sz in sizes.items() if rel not in left)
+                if left:
+                    last = tail.splitlines()[-1] if tail else ""
+                    info["errors"].append(f"'datalad drop' could not remove {len(left)} file(s) (exit code {rc}): {last}. "
+                                          f"Free the space later with:  datalad drop <file>  inside {repo_dir}")
+    except Exception as e:                                 # anything unexpected here must not stop the batch
+        info["errors"].append(f"DataLad clean-up failed: {type(e).__name__}: {e}")
     return info
 
 
@@ -3511,16 +3645,11 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
     if elig.ok and not args.force_reanalysis:
         cached, why_again = load_cached_status(subj_dir, signature)
         if cached is not None:
-            subject_header(idx, total, sub, row, t_batch)
-            step(1, N_STEPS, "Eligibility check")
-            print_eligibility(elig)
-            step(2, N_STEPS, "Earlier results")
-            good("This subject was already analysed with the same QC logic and thresholds.")
-            say(f"Analysed on {cached.get('finished')}: verdict {cached.get('qc_verdict')}, {cached.get('qc_label')}", 4)
-            note("Nothing is downloaded and nothing is analysed again (use --force-reanalysis to run it again).")
             cached["reused"] = True
-            print_result(cached, subj_dir / "status.txt")
-            results.append(cached)
+            when = str(cached.get("finished"))[:16].replace("T", " ")
+            say(f"{paint(f'[{idx}/{total}]', 'cyan', 'bold')}  {paint(sub, 'bold')}   {vc('COMPLETED')}   "
+                f"already analysed, skipped   " + paint(f"({cached.get('qc_verdict')}, {cached.get('qc_label')}, analysed {when})", "dim"), 1)
+            results.append(cached)                            # nothing is downloaded, analysed or rewritten
             return
 
     status: dict[str, Any] = {
@@ -3532,20 +3661,24 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
         "eligibility": {"eligible": elig.ok, "rules": elig.rules, "reasons": elig.reasons, "notes": elig.notes,
                         "sessions_to_analyse": elig.sessions if elig.ok else []},
         "download": None, "cleanup": None, "recordings": [], "counts": {}, "key_findings": [], "attention": [],
-        "figures": [], "warnings": [], "files": [], "error": None, "reused": False,
+        "figures": [], "warnings": [], "files": [], "error": None, "reused": False, "retry_needed": False,
         "folders": {"subject": str(subj_dir), "qc_results": str(qc_dir) if elig.ok else None},
     }
     subj_dir.mkdir(parents=True, exist_ok=True)
     real_stdout, log_fh = sys.stdout, None
+    tee, own_tee = _TEE, False
+    if tee is None:                                        # called outside main(): use a temporary Tee
+        tee, own_tee = Tee(real_stdout), True
+        sys.stdout = tee
     try:
         if elig.ok:
             fig_dir.mkdir(parents=True, exist_ok=True)
-            for p_ in fig_dir.glob("*.png"):              # no stale files from an earlier run
-                p_.unlink()
+            for p_ in list(fig_dir.glob("*.png")):        # no stale files from an earlier run
+                _remove_quietly(p_)
             for name in OUTPUT_FILES:
-                (qc_dir / name).unlink(missing_ok=True)
+                _remove_quietly(qc_dir / name)
             log_fh = open(qc_dir / "run_log.txt", "w", encoding="utf-8")
-            sys.stdout = Tee(real_stdout, log_fh)
+            tee.set_log(log_fh)                           # from now on the console text also goes to run_log.txt
 
         subject_header(idx, total, sub, row, t_batch)
 
@@ -3601,6 +3734,10 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
             note(f"participants.tsv cross-check: {xcheck}")
         dl_info["participants_tsv_crosscheck"] = xcheck
         status["download"] = dl_info
+        if [r for r in dl_info.get("failed", []) if r.endswith("_eeg.edf")] or dl_info.get("error"):
+            status["retry_needed"] = True                    # the download was not complete (internet / server problem)
+            warn("The download was not complete. The recordings that are available are analysed now; "
+                 "this subject is tried again the next time you run the command.")
 
         # ---------------- step 3: QC ----------------
         step(3, N_STEPS, "Quality-control analysis")
@@ -3683,12 +3820,17 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
             recordings=json.loads(df_rec[cols].to_json(orient="records")),
             counts=counts, key_findings=key_finding_lines(df_rec, df_ch), attention=attention_points(df_issues),
             figures=fig_res["saved"], warnings=fig_res["errors"] + fig_res["notes"])
+        if status["retry_needed"]:
+            status["headline"] += "; DOWNLOAD INCOMPLETE: this subject will be analysed again next time"
 
         # ---------------- step 5: clean-up (the analysed data are no longer needed) ----------------
         step(5, N_STEPS, "Clean-up")
         if no_data:
             status["cleanup"] = {"performed": False, "reason": "no recording could be analysed"}
             note("Nothing to clean up.")
+        elif status["retry_needed"]:
+            status["cleanup"] = {"performed": False, "reason": "download incomplete: files kept, so the retry does not download them again"}
+            note("Data files kept (the download was incomplete; the retry will not download them again).")
         elif args.no_download:
             status["cleanup"] = {"performed": False, "reason": "--no-download: your own data files are never deleted"}
             note("Data files kept (--no-download: your own files are never deleted).")
@@ -3697,12 +3839,19 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
             note("Data files kept (--keep-data).")
         else:
             with Task("Deleting the analysed data (data folder and DataLad copy)") as t:
-                status["cleanup"] = cleanup_downloaded(sub, elig.sessions, data_dir, repo_dir)
+                try:
+                    status["cleanup"] = cleanup_downloaded(sub, elig.sessions, data_dir, repo_dir)
+                except Exception as e_:                    # cleanup_downloaded never raises; this is only a safety net
+                    status["cleanup"] = {"performed": True, "data_files_deleted": 0, "annex_files_dropped": 0, "bytes_freed": 0,
+                                         "errors": [f"clean-up failed: {type(e_).__name__}: {e_}"]}
                 cl = status["cleanup"]
                 t.detail = (f"{cl['data_files_deleted']} data file(s) deleted, {cl['annex_files_dropped']} DataLad file(s) "
-                            f"dropped, {cl['bytes_freed'] / 1e6:.0f} MB freed")
+                            f"dropped, {cl['bytes_freed'] / 1e6:.0f} MB freed" + ("  (with warnings)" if cl["errors"] else ""))
             for err in status["cleanup"]["errors"]:
-                warn(err, 8)
+                warn(f"Clean-up: {err}", 8)
+                status["warnings"].append(f"clean-up: {err}")
+            if status["cleanup"]["errors"]:
+                note("The analysis is finished and saved; only the clean-up was incomplete. Continuing with the next subject.", 8)
 
     except KeyboardInterrupt:
         status.update(status="INTERRUPTED", headline="Stopped by the user (Ctrl+C) before this subject was finished")
@@ -3732,36 +3881,219 @@ def process_subject(sub: str, idx: int, total: int, args: argparse.Namespace,
             print(f"WARNING: could not write the status file: {werr}", file=sys.stderr)
         print_result(status, subj_dir / "status.txt")
         results.append(status)
-        sys.stdout = real_stdout
+        tee.set_log(None)                                  # detach FIRST, then close: nobody can write to a closed file
+        if own_tee:
+            sys.stdout = real_stdout
         if log_fh is not None:
-            log_fh.close()
+            try:
+                log_fh.close()
+            except OSError:
+                pass
 
 
 # ======================================================================
 # BATCH SUMMARY
 # ======================================================================
-def update_overview_csv(out_root: Path, results: list[dict[str, Any]]) -> Path:
-    """summary_all_subjects.csv collects ALL subjects processed so far (also from earlier runs)."""
-    rows = [{"subject": s["subject"], "status": s["status"], "qc_verdict": s["qc_verdict"] or "", "screening_label": s.get("qc_label") or "",
-             "headline": s["headline"], "sex": s["participant"]["sex"], "age": s["participant"]["age"],
-             "recordings_expected": s["counts"].get("expected", ""), "PASS": s["counts"].get("PASS", ""),
-             "FLAG": s["counts"].get("FLAG", ""), "FAIL": s["counts"].get("FAIL", ""),
-             "MISSING": s["counts"].get("MISSING", ""),
-             "usable_recordings": (sum(s["counts"].get(k, 0) for k in ("USABLE", "USABLE_WITH_FLAGS", "USABLE_NEEDS_INTERPOLATION"))
-                                   if s["counts"] else ""),
-             "reused": bool(s.get("reused")), "finished": s["finished"], "folder": s["folders"]["subject"]}
-            for s in results]
-    new = pd.DataFrame(rows).astype(str)
-    path = out_root / "summary_all_subjects.csv"
-    df = new
-    if path.exists():
+OVERVIEW_BASENAME = "summary_all_subjects"
+_XL_FILLS = {                          # colours of verdict / status / label cells in the Excel file
+    "PASS": "C6EFCE", "COMPLETED": "C6EFCE", "USABLE": "C6EFCE",
+    "FLAG": "FFEB9C", "USABLE_WITH_FLAGS": "FFEB9C", "PARTIALLY_USABLE": "FFEB9C", "REJECTED": "FFEB9C",
+    "USABLE_NEEDS_INTERPOLATION": "DDEBF7",
+    "FAIL": "FFC7CE", "REJECT": "FFC7CE", "ERROR": "FFC7CE", "NO_DATA": "FFC7CE", "NO DATA": "FFC7CE",
+    "MISSING": "E1D5F0", "INTERRUPTED": "FFEB9C",
+}
+_XL_COLOR_COLUMNS = {"status", "qc_verdict", "screening_label", "overall", "label", "verdict"}
+
+
+def _split_names(series: pd.Series, sep: str) -> list[str]:
+    return [x for s in series.dropna().astype(str) for x in s.split(sep) if x.strip()]
+
+
+def collect_overview(out_root: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Read EVERY subject folder under out_root (status.json + qc_results/*.csv) and build three tables:
+    one row per subject, one row per recording, one row per finding. The folders are the single source of truth,
+    so the overview also contains subjects from earlier runs."""
+    subjects, recs, issues = [], [], []
+    for d in sorted(p for p in out_root.glob("sub-*") if p.is_dir()):
+        sp = d / "status.json"
+        if not sp.exists():
+            continue
         try:
-            old = pd.read_csv(path, dtype=str, keep_default_na=False)
-            df = pd.concat([old[~old["subject"].isin(new["subject"])], new], ignore_index=True)
+            s = json.loads(sp.read_text(encoding="utf-8"))
         except Exception:
-            df = new
-    df.sort_values("subject").to_csv(path, index=False)
-    return path
+            continue
+        c = s.get("counts") or {}
+        elig = s.get("eligibility") or {}
+        part = s.get("participant") or {}
+        cl = s.get("cleanup") or {}
+        row: dict[str, Any] = {
+            "subject": s.get("subject", d.name), "status": s.get("status"), "qc_verdict": s.get("qc_verdict") or "",
+            "screening_label": s.get("qc_label") or "", "headline": s.get("headline", ""),
+            "rejection_reasons": "; ".join(elig.get("reasons", [])),
+            "sex": part.get("sex", ""), "age": part.get("age", ""), "handedness": part.get("handedness", ""),
+            "sessions_analysed": ", ".join(elig.get("sessions_to_analyse", [])),
+            "recordings_expected": c.get("expected", ""),
+            "PASS": c.get("PASS", ""), "FLAG": c.get("FLAG", ""), "FAIL": c.get("FAIL", ""), "MISSING": c.get("MISSING", ""),
+            "usable_recordings": (sum(c.get(k, 0) for k in ("USABLE", "USABLE_WITH_FLAGS", "USABLE_NEEDS_INTERPOLATION"))
+                                  if c else ""),
+            "USABLE": c.get("USABLE", ""), "USABLE_WITH_FLAGS": c.get("USABLE_WITH_FLAGS", ""),
+            "USABLE_NEEDS_INTERPOLATION": c.get("USABLE_NEEDS_INTERPOLATION", ""), "REJECT": c.get("REJECT", ""),
+            "bad_channels (count of recordings)": "", "critical_bad_channels": "", "reason_codes": "",
+            "alpha_ratio_EC_EO_median": "", "line50_db_median": "",
+            "duration_s": s.get("duration_s", ""), "started": s.get("started", ""), "finished": s.get("finished", ""),
+            "data_deleted_after_qc": ("" if not cl else "no (kept)" if not cl.get("performed")
+                                      else "incomplete (see status.txt)" if cl.get("errors") else "yes"),
+            "mb_freed": round(cl.get("bytes_freed", 0) / 1e6) if cl.get("performed") else "",
+            "retry_needed": bool(s.get("retry_needed", False)),
+            "qc_logic_version": s.get("qc_logic_version", ""), "folder": str(d),
+        }
+        qc = d / "qc_results"
+        try:
+            if (qc / "df_recordings.csv").exists():
+                dr = pd.read_csv(qc / "df_recordings.csv", dtype={"bad_channels": str, "codes": str,
+                                                                 "critical_bad_channels": str}, keep_default_na=False)
+                if "bad_channels" in dr:
+                    cnt = Counter(_split_names(dr["bad_channels"], ", "))
+                    row["bad_channels (count of recordings)"] = ", ".join(f"{k} x{v}" for k, v in cnt.most_common())
+                if "critical_bad_channels" in dr:
+                    row["critical_bad_channels"] = ", ".join(sorted(set(_split_names(dr["critical_bad_channels"], ", "))))
+                if "codes" in dr:
+                    row["reason_codes"] = "; ".join(sorted(set(_split_names(dr["codes"], "; "))))
+                if {"task", "alpha_ratio_EC_EO"} <= set(dr.columns):
+                    v = pd.to_numeric(dr.loc[dr["task"] == "EyesClosed", "alpha_ratio_EC_EO"], errors="coerce").dropna()
+                    row["alpha_ratio_EC_EO_median"] = round(float(v.median()), 2) if len(v) else ""
+                if "line50_db" in dr:
+                    v = pd.to_numeric(dr["line50_db"], errors="coerce").dropna()
+                    row["line50_db_median"] = round(float(v.median()), 1) if len(v) else ""
+                recs.append(dr)
+            if (qc / "qc_issues.csv").exists():
+                di = pd.read_csv(qc / "qc_issues.csv", dtype=str, keep_default_na=False)
+                if len(di):
+                    issues.append(di)
+        except Exception:
+            pass                                    # a damaged csv of one subject must not break the overview
+        subjects.append(row)
+
+    df_s = pd.DataFrame(subjects)
+    df_r = pd.concat(recs, ignore_index=True) if recs else pd.DataFrame(columns=["subject"])
+    df_i = pd.concat(issues, ignore_index=True) if issues else pd.DataFrame(
+        columns=["subject", "session", "task", "acq", "layer", "code", "finding", "value", "limit", "verdict"])
+    return df_s, df_r, df_i
+
+
+def _legend_table() -> pd.DataFrame:
+    rows = [
+        ("About", f"Overview of all subjects found in the results folder. QC logic {QC_LOGIC_VERSION} "
+                  f"(fingerprint {qc_signature(DATASET_VERSION)}), written {datetime.now().astimezone().isoformat(timespec='seconds')}"),
+        ("Sheets", "Subjects = one row per subject | Recordings = one row per recording | Issues = every FAIL / FLAG / MISSING finding and PASS note"),
+        ("status", "COMPLETED = analysed | REJECTED = age / late triggers, nothing downloaded | NO_DATA = no recording could be analysed | "
+                   "ERROR = unexpected problem (data kept) | INTERRUPTED = stopped with Ctrl+C"),
+        ("verdict", "PASS = nothing to note | FLAG = small problem, kept | FAIL = clear problem | MISSING = file not available"),
+        ("label (recording)", "USABLE | USABLE_WITH_FLAGS | USABLE_NEEDS_INTERPOLATION (1-6 bad channels, at most one critical) | REJECT (= FAIL)"),
+        ("label (subject)", "worst label of its recordings, or PARTIALLY_USABLE when some recordings are usable and others rejected"),
+        ("codes", "CRITICAL_CHANNELS_BAD / TOO_MANY_BAD_CHANNELS / DEAD_SPECTRUM / LINE_NOISE_SATURATION = FAIL | "
+                  "HIGH_LINE_NOISE, LINE_NOISE, LOW_ALPHA_PROMINENCE, WEAK_ALPHA_BLOCKING, NO_ALPHA_BLOCKING, CRITICAL_CHANNEL_BAD, "
+                  "LOW_GLOBAL_SPATIAL_CORRELATION, FROZEN_SEGMENT = FLAG | USABLE_NEEDS_INTERPOLATION = PASS note"),
+        ("critical channels", ", ".join(CONFIG["critical_channels"]) + f" (2 or more bad = FAIL; more than {CONFIG['interpolatable_max_channels']} bad channels = FAIL)"),
+        ("spatial correlation", f"|r| with the median of all channels below {CONFIG['corr_threshold']} "
+                                f"({CONFIG['corr_threshold_relaxed']} for {', '.join(CONFIG['corr_relaxed_channels'])}) = uncorrelated / noisy channel"),
+        ("baseline correction", f"{CONFIG['detrend_method']} {CONFIG['detrend_hp_hz']} Hz, in memory only, before the voltage statistics"),
+        ("line noise", f"> {CONFIG['line_flag_db']:.0f} dB = FLAG, > {CONFIG['line_high_db']:.0f} dB = FLAG HIGH_LINE_NOISE (FAIL only with clipping of "
+                       f"{CONFIG['line_saturation_channel_fraction']:.0%} of the channels)"),
+    ]
+    return pd.DataFrame(rows, columns=["item", "meaning"])
+
+
+def _clean_for_excel(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove control characters that Excel files cannot hold."""
+    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+    return df.apply(lambda col: col.map(lambda v: ILLEGAL_CHARACTERS_RE.sub("", v) if isinstance(v, str) else v))
+
+
+def _style_sheet(ws, df: pd.DataFrame) -> None:
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+    head_fill = PatternFill("solid", fgColor="1F3864")
+    for cell in ws[1]:
+        cell.fill, cell.font = head_fill, Font(bold=True, color="FFFFFF")
+        cell.alignment = Alignment(vertical="center", wrap_text=False)
+    ws.freeze_panes = "A2"
+    if len(df):
+        ws.auto_filter.ref = ws.dimensions
+    for j, col in enumerate(df.columns, 1):
+        sample = [len(str(v)) for v in df[col].head(300)]
+        ws.column_dimensions[get_column_letter(j)].width = min(max([10, len(str(col)) + 2] + [n + 2 for n in sample]), 60)
+        if col in _XL_COLOR_COLUMNS:
+            from openpyxl.styles import PatternFill as PF
+            for i in range(2, ws.max_row + 1):
+                c = ws.cell(i, j)
+                color = _XL_FILLS.get(str(c.value))
+                if color:
+                    c.fill = PF("solid", fgColor=color)
+
+
+def update_overview_files(out_root: Path) -> dict[str, Any]:
+    """Rebuild summary_all_subjects.xlsx (3 sheets + legend) and summary_all_subjects.csv from ALL subject folders.
+
+    Called after EVERY subject, so the file is always up to date (also after Ctrl+C or a crash).
+    Files are written to a temporary name and then renamed, so a half-written file never replaces a good one.
+    If the Excel file is open in Excel (locked on Windows) the update is skipped with a warning and
+    done again after the next subject. Never raises.
+    """
+    out: dict[str, Any] = {"csv": None, "xlsx": None, "n_subjects": 0, "warnings": []}
+    try:
+        df_s, df_r, df_i = collect_overview(out_root)
+    except Exception as e:
+        out["warnings"].append(f"overview could not be collected: {type(e).__name__}: {e}")
+        return out
+    out["n_subjects"] = len(df_s)
+    if df_s.empty:
+        return out
+
+    csv_path = out_root / f"{OVERVIEW_BASENAME}.csv"
+    tmp_csv = out_root / f".{OVERVIEW_BASENAME}.tmp.csv"
+    try:
+        df_s.to_csv(tmp_csv, index=False)
+        os.replace(tmp_csv, csv_path)
+        out["csv"] = csv_path
+    except Exception as e:
+        out["warnings"].append(f"{csv_path.name} could not be updated ({type(e).__name__}: {e}); "
+                               "close the file if it is open and it will be updated after the next subject")
+    finally:
+        try:
+            tmp_csv.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    xlsx_path = out_root / f"{OVERVIEW_BASENAME}.xlsx"
+    try:
+        import openpyxl  # noqa: F401
+    except ImportError:
+        out["warnings"].append("Excel overview skipped: the package 'openpyxl' is not installed "
+                               "(pip install openpyxl). The CSV overview was written.")
+        return out
+    tmp_xlsx = out_root / f".{OVERVIEW_BASENAME}.tmp.xlsx"
+    try:
+        sheets = {"Subjects": df_s, "Recordings": df_r, "Issues": df_i, "Legend": _legend_table()}
+        with pd.ExcelWriter(tmp_xlsx, engine="openpyxl") as xw:
+            for name, df in sheets.items():
+                df = _clean_for_excel(df)
+                df.to_excel(xw, sheet_name=name, index=False)
+                _style_sheet(xw.sheets[name], df)
+        os.replace(tmp_xlsx, xlsx_path)
+        out["xlsx"] = xlsx_path
+    except PermissionError:
+        out["warnings"].append(f"{xlsx_path.name} is locked (open in Excel?). It will be updated again after the next subject; "
+                               "close the file to let the script write it")
+    except Exception as e:
+        out["warnings"].append(f"{xlsx_path.name} could not be written: {type(e).__name__}: {e}")
+    finally:
+        try:
+            if tmp_xlsx.exists():
+                tmp_xlsx.unlink()
+        except OSError:
+            pass
+    return out
 
 
 def print_batch_summary(results: list[dict[str, Any]], elapsed: float) -> None:
@@ -3822,11 +4154,32 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--keep-data", action="store_true",
                    help="do not delete the downloaded data after the analysis (default: they are deleted to save disk space)")
     p.add_argument("--verify-table", metavar="TSV", help="compare the embedded participant table with a TSV file and exit")
+    p.add_argument("--stop-after-failures", type=int, default=3, metavar="N",
+                   help="stop the batch after N subjects IN A ROW whose download failed (no internet / server problem); "
+                        "0 = never stop (default: 3). Run the same command again to continue.")
     p.add_argument("--debug", action="store_true", help="show the full traceback and stop, instead of recording the problem in status.txt")
     return p.parse_args(argv)
 
 
+def selection_command(subjects: list[str]) -> str:
+    """['sub-051', ..., 'sub-100', 'sub-120'] -> '51 to 100 120'  (the syntax the script itself accepts)"""
+    nums = sorted(int(x[4:]) for x in subjects)
+    parts: list[str] = []
+    i = 0
+    while i < len(nums):
+        j = i
+        while j + 1 < len(nums) and nums[j + 1] == nums[j] + 1:
+            j += 1
+        parts += [f"{nums[i]} to {nums[j]}"] if j - i >= 2 else [str(n) for n in nums[i:j + 1]]
+        i = j + 1
+    return " ".join(parts)
+
+
+_TEE: Tee | None = None          # one Tee for the whole run; only its log file is attached / detached per subject
+
+
 def main(argv: list[str] | None = None) -> int:
+    global _TEE
     args = parse_args(argv)
     if args.verify_table:
         return verify_table(args.verify_table)
@@ -3839,8 +4192,20 @@ def main(argv: list[str] | None = None) -> int:
             print("Examples:   1 2 3      |      1 to 20      |      1 5 to 8 12", file=sys.stderr)
             return 2
     else:
-        subjects = ask_subjects()
+        subjects = ask_subjects()          # asked BEFORE the Tee exists, so the prompt keeps normal line editing
 
+    real_stdout = sys.stdout
+    _TEE = Tee(real_stdout)
+    sys.stdout = _TEE
+    try:
+        return _run_batch(args, subjects)
+    finally:
+        _TEE.set_log(None)                 # whoever still holds a reference (e.g. an exit handler) writes to the screen only
+        sys.stdout = real_stdout
+        _TEE = None
+
+
+def _run_batch(args: argparse.Namespace, subjects: list[str]) -> int:
     sig = qc_signature(args.dataset_version)
     n_ok = n_reuse = 0
     for s in subjects:
@@ -3854,29 +4219,65 @@ def main(argv: list[str] | None = None) -> int:
     say(f"Subjects : {len(subjects)}  ({fmt_selection(subjects)})", 1)
     what = ("files already in the data folder, kept" if args.no_download
             else "downloaded, checked, kept" if args.keep_data else "downloaded, checked, then deleted")
-    say(f"Plan     : {n_ok - n_reuse} to analyse ({what}), {n_reuse} already analysed (reused), "
+    say(f"Plan     : {n_ok - n_reuse} to analyse ({what}), {n_reuse} already analysed (skipped), "
         f"{len(subjects) - n_ok} rejected (age / late triggers: nothing is downloaded, the reason goes into the status file)", 1)
     say(f"Folders  : data = {args.data_dir}   |   results = {args.out_root}", 1)
+    say("Safe to stop at any time (Ctrl+C): every finished subject is saved; run the same command again to continue.", 1)
     rule("=")
     args.out_root.mkdir(parents=True, exist_ok=True)
 
     results: list[dict[str, Any]] = []
     t_batch = time.time()
+    shown: set[str] = set()
+    last_overview: dict[str, Any] = {}
+
+    def refresh_overview(announce: bool) -> None:
+        """Excel + CSV of ALL subjects, rebuilt from the subject folders. Never raises."""
+        nonlocal last_overview
+        last_overview = update_overview_files(args.out_root)
+        for w in last_overview["warnings"]:
+            if w not in shown:                              # every distinct warning once, not once per subject
+                shown.add(w)
+                warn(w, 1)
+        if announce and (last_overview.get("xlsx") or last_overview.get("csv")):
+            note(f"Overview updated ({last_overview['n_subjects']} subject(s)): "
+                 f"{(last_overview.get('xlsx') or last_overview['csv']).name}", 1)
+
+    in_a_row = 0                                            # subjects in a row whose download failed
     try:
         for i, sub in enumerate(subjects, 1):
             process_subject(sub, i, len(subjects), args, results, t_batch)
+            in_a_row = in_a_row + 1 if results[-1].get("retry_needed") else 0
+            refresh_overview(announce=not results[-1].get("reused"))    # the overview is updated after EVERY subject
+            if args.stop_after_failures and in_a_row >= args.stop_after_failures:
+                print()
+                warn(f"The download failed for {in_a_row} subjects in a row: the internet connection or the server has a "
+                     "problem. Stopped here so that nothing is wasted. Run the same command again later to continue.", 1)
+                break
     except KeyboardInterrupt:
         print()
         warn("Stopped by the user (Ctrl+C). The subjects that were finished are saved.", 1)
+        refresh_overview(announce=False)
 
     if results:
         print_batch_summary(results, time.time() - t_batch)
-        overview = update_overview_csv(args.out_root, results)
         print()
         say(f"Results folder : {args.out_root.resolve()}", 1)
-        say(f"Overview (all subjects processed so far): {overview}", 1)
+        for key, text in (("xlsx", "Excel overview of all subjects"), ("csv", "CSV overview of all subjects")):
+            if last_overview.get(key):
+                say(f"{text}: {last_overview[key]}", 1)
+
+    done = {r["subject"] for r in results if r["status"] in ("COMPLETED", "REJECTED") and not r.get("retry_needed")}
+    remaining = [s for s in subjects if s not in done]
+    if remaining:
+        print()
+        rule("-")
+        say(f"{paint('NOT FINISHED', 'bold')}   {len(remaining)} of {len(subjects)} subject(s) still have to be analysed", 1)
+        say("Nothing is lost: run the SAME command again and the finished subjects are skipped automatically.", 1)
+        say(f"Or only the missing ones:   python qc_eeg_subject.py {selection_command(remaining)}   (same options as before)", 1)
+        rule("-")
     by = Counter(s["status"] for s in results)
-    if any(by.get(k) for k in ("ERROR", "NO_DATA", "INTERRUPTED")) or len(results) < len(subjects):
+    if remaining or any(by.get(k) for k in ("ERROR", "NO_DATA", "INTERRUPTED")):
         return 1
     if results and by.get("REJECTED", 0) == len(results):
         return 2
