@@ -1,0 +1,2 @@
+subject,sex,age,sessions_analysed,n_recordings,n_PASS,n_FLAG,n_FAIL,n_MISSING,n_USABLE,n_USABLE_WITH_FLAGS,n_USABLE_NEEDS_INTERPOLATION,n_REJECT,overall,label,channels_flagged_bad (count of recordings)
+sub-325,M,24,ses-1,4,4,0,0,0,4,0,0,0,PASS,USABLE,

@@ -1,0 +1,216 @@
+{
+  "subject": "sub-325",
+  "status": "COMPLETED",
+  "qc_verdict": "PASS",
+  "qc_label": "USABLE",
+  "headline": "overall PASS; USABLE: 4/4 recordings usable; no bad channels; alpha blocking OK (median 4.7)",
+  "qc_logic_version": "screening-2.2",
+  "qc_signature": "40d2ea6566ac1ac5",
+  "started": "2026-10-21T15:57:51+00:00",
+  "finished": "2026-10-21T15:58:49+00:00",
+  "duration_s": 58.0,
+  "participant": {
+    "sex": "M",
+    "age": "24",
+    "handedness": "right"
+  },
+  "eligibility": {
+    "eligible": true,
+    "rules": [
+      {
+        "rule": "Age <= 60",
+        "result": "PASS",
+        "detail": "age 24"
+      },
+      {
+        "rule": "Session 1 completed",
+        "result": "PASS",
+        "detail": "yes"
+      },
+      {
+        "rule": "No late triggers",
+        "result": "PASS",
+        "detail": "late_ses1=0, late_ses2=n/a"
+      },
+      {
+        "rule": "Session 2 completed",
+        "result": "INFO",
+        "detail": "no (allowed): only session 1 is analysed"
+      }
+    ],
+    "reasons": [],
+    "notes": [
+      "Session 2 was not completed: only ses-1 (4 recordings) will be analysed."
+    ],
+    "sessions_to_analyse": [
+      "ses-1"
+    ]
+  },
+  "download": {
+    "method": "https",
+    "repo_commit": null,
+    "repo_tag": null,
+    "downloaded": [
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-pre_eeg.edf",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-post_eeg.edf",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-pre_eeg.edf",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-post_eeg.edf",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-pre_eeg.json",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-pre_events.tsv",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-post_eeg.json",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesClosed_acq-post_events.tsv",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-pre_eeg.json",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-pre_events.tsv",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-post_eeg.json",
+      "sub-325/ses-1/eeg/sub-325_ses-1_task-EyesOpen_acq-post_events.tsv"
+    ],
+    "already_present": [],
+    "not_in_dataset": [],
+    "failed": [],
+    "participants_tsv_crosscheck": "participants.tsv not found (check skipped)"
+  },
+  "cleanup": {
+    "performed": true,
+    "reason": "",
+    "data_files_deleted": 12,
+    "annex_files_dropped": 0,
+    "bytes_freed": 96922072,
+    "errors": []
+  },
+  "recordings": [
+    {
+      "session": "ses-1",
+      "task": "EyesClosed",
+      "acq": "pre",
+      "overall": "PASS",
+      "label": "USABLE",
+      "codes": "",
+      "n_bad_channels": 0,
+      "bad_channels": "",
+      "bad_detail": "",
+      "n_critical_bad": 0,
+      "n_uncorrelated": 0,
+      "frozen_s": 0.84,
+      "alpha_ratio_EC_EO": 4.53,
+      "line50_db": 2.41,
+      "notch_suggested": false
+    },
+    {
+      "session": "ses-1",
+      "task": "EyesClosed",
+      "acq": "post",
+      "overall": "PASS",
+      "label": "USABLE",
+      "codes": "",
+      "n_bad_channels": 0,
+      "bad_channels": "",
+      "bad_detail": "",
+      "n_critical_bad": 0,
+      "n_uncorrelated": 0,
+      "frozen_s": 0.0,
+      "alpha_ratio_EC_EO": 4.85,
+      "line50_db": 3.56,
+      "notch_suggested": false
+    },
+    {
+      "session": "ses-1",
+      "task": "EyesOpen",
+      "acq": "pre",
+      "overall": "PASS",
+      "label": "USABLE",
+      "codes": "",
+      "n_bad_channels": 0,
+      "bad_channels": "",
+      "bad_detail": "",
+      "n_critical_bad": 0,
+      "n_uncorrelated": 0,
+      "frozen_s": 0.6,
+      "alpha_ratio_EC_EO": 4.53,
+      "line50_db": 5.08,
+      "notch_suggested": false
+    },
+    {
+      "session": "ses-1",
+      "task": "EyesOpen",
+      "acq": "post",
+      "overall": "PASS",
+      "label": "USABLE",
+      "codes": "",
+      "n_bad_channels": 0,
+      "bad_channels": "",
+      "bad_detail": "",
+      "n_critical_bad": 0,
+      "n_uncorrelated": 0,
+      "frozen_s": 0.32,
+      "alpha_ratio_EC_EO": 4.85,
+      "line50_db": 3.85,
+      "notch_suggested": false
+    }
+  ],
+  "counts": {
+    "expected": 4,
+    "PASS": 4,
+    "FLAG": 0,
+    "FAIL": 0,
+    "MISSING": 0,
+    "USABLE": 4,
+    "USABLE_WITH_FLAGS": 0,
+    "USABLE_NEEDS_INTERPOLATION": 0,
+    "REJECT": 0
+  },
+  "key_findings": [
+    "Recordings: 4 expected  |  PASS 4  |  FLAG 0  |  FAIL 0  |  MISSING 0",
+    "Screening: 4 of 4 analysed recordings are usable (as they are 4, with flags 0, after interpolation 0); rejected 0",
+    "Recordings with at least one bad channel (flat, clipped, noisy or uncorrelated): 0 of 4",
+    "No channel was flagged as flat, clipped, noisy or uncorrelated.",
+    "Alpha blocking (Eyes Closed / Eyes Open power on O1, O2, Oz): median ratio 4.69; 2 of 2 pairs at or above 1.5 (weak alpha is only a FLAG: about 10-15% of healthy people are alpha non-responders)",
+    "50 Hz line noise: median 3.7 dB above its flanks; a notch filter is suggested for 0 of 4 recordings (above 10 dB)"
+  ],
+  "attention": [],
+  "figures": [
+    "A_psd_occipital_sub-325.png",
+    "B_amplitude_heatmap_sub-325.png",
+    "C_traces_sub-325.png",
+    "D_psd_all_channels_sub-325.png",
+    "E_scalp_3d_sub-325.png",
+    "F_overview_sub-325_ses-1_EyesClosed_post.png",
+    "F_overview_sub-325_ses-1_EyesClosed_pre.png",
+    "F_overview_sub-325_ses-1_EyesOpen_post.png",
+    "F_overview_sub-325_ses-1_EyesOpen_pre.png",
+    "G_spatial_correlation_sub-325.png",
+    "sub-325_task-rest_channel_quality_topomap.png"
+  ],
+  "warnings": [],
+  "files": [
+    "status.txt",
+    "status.json",
+    "qc_results/df_channels.csv",
+    "qc_results/df_recordings.csv",
+    "qc_results/df_recordings_full.csv",
+    "qc_results/df_subjects.csv",
+    "qc_results/qc_issues.csv",
+    "qc_results/qc_pivot.csv",
+    "qc_results/qc_report.txt",
+    "qc_results/qc_signoff.csv",
+    "qc_results/run_log.txt",
+    "qc_results/run_manifest.json",
+    "qc_results/figures/A_psd_occipital_sub-325.png",
+    "qc_results/figures/B_amplitude_heatmap_sub-325.png",
+    "qc_results/figures/C_traces_sub-325.png",
+    "qc_results/figures/D_psd_all_channels_sub-325.png",
+    "qc_results/figures/E_scalp_3d_sub-325.png",
+    "qc_results/figures/F_overview_sub-325_ses-1_EyesClosed_post.png",
+    "qc_results/figures/F_overview_sub-325_ses-1_EyesClosed_pre.png",
+    "qc_results/figures/F_overview_sub-325_ses-1_EyesOpen_post.png",
+    "qc_results/figures/F_overview_sub-325_ses-1_EyesOpen_pre.png",
+    "qc_results/figures/G_spatial_correlation_sub-325.png",
+    "qc_results/figures/sub-325_task-rest_channel_quality_topomap.png"
+  ],
+  "error": null,
+  "reused": false,
+  "retry_needed": false,
+  "folders": {
+    "subject": "qc_output/sub-325",
+    "qc_results": "qc_output/sub-325/qc_results"
+  }
+}
