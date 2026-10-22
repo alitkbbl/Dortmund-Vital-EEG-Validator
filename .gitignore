@@ -1,0 +1,42 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ===== Virtual environments =====
+venv/
+.venv/
+env/
+ENV/
+
+# ===== Environment variables & secrets =====
+.env
+.env.*
+*.env
+
+# ===== Testing & cache =====
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ===== IDEs & editors =====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== OS files =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs & local databases =====
+*.log
+*.sqlite3
+*.db
