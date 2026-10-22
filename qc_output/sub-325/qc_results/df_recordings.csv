@@ -1,0 +1,5 @@
+subject,session,task,acq,overall,label,codes,verdict_header,verdict_integrity,verdict_amplitude,verdict_spectral,verdict_consistency,duration_s,n_bad_channels,bad_channels,bad_detail,n_critical_bad,critical_bad_channels,n_uncorrelated,uncorrelated_channels,interpolation_needed,median_spatial_corr,frozen_s,typical_amp_uv,median_kurtosis,alpha_peak_hz,alpha_prom_db,alpha_ratio_EC_EO,alpha_non_responder_possible,line50_db,line100_db,line150_db,notch_suggested,trigger_events,load_error
+sub-325,ses-1,EyesClosed,pre,PASS,USABLE,,PASS,PASS,PASS,PASS,PASS,184.0,0,,,0,,0,,False,0.65,0.84,7.82,300.75,9.58,9.43,4.53,False,2.41,1.09,10.19,False,1,
+sub-325,ses-1,EyesClosed,post,PASS,USABLE,,PASS,PASS,PASS,PASS,PASS,195.0,0,,,0,,0,,False,0.72,0.0,7.66,771.72,8.92,11.62,4.85,False,3.56,0.77,4.7,False,1,
+sub-325,ses-1,EyesOpen,pre,PASS,USABLE,,PASS,PASS,PASS,PASS,PASS,183.0,0,,,0,,0,,False,0.72,0.6,6.14,313.6,10.08,2.5,4.53,False,5.08,0.75,12.11,False,1,
+sub-325,ses-1,EyesOpen,post,PASS,USABLE,,PASS,PASS,PASS,PASS,PASS,183.0,0,,,0,,0,,False,0.77,0.32,5.74,402.53,9.5,3.73,4.85,False,3.85,0.23,4.85,False,1,

@@ -1,0 +1,49 @@
+
+====================================================================================================
+ [23/48]  sub-325     sex M, age 24, right-handed     elapsed 14 min 25 s
+====================================================================================================
+
+  Step 1/5  Eligibility check
+    [PASS] Age <= 60              age 24
+    [PASS] Session 1 completed    yes
+    [PASS] No late triggers       late_ses1=0, late_ses2=n/a
+    [INFO] Session 2 completed    no (allowed): only session 1 is analysed
+    ✔ Eligible. Sessions to analyse: ses-1
+    → Session 2 was not completed: only ses-1 (4 recordings) will be analysed.
+
+  Step 2/5  Data: download
+    Source: OpenNeuro ds005385 v1.0.3  |  method: https  |  4 EDF file(s) to download
+    ! HTTPS downloads the newest OpenNeuro snapshot, which is not guaranteed to be v1.0.3. Use DataLad for an exactly pinned version.
+    ✔ Downloading [1/4] sub-325_ses-1_task-EyesClosed_acq-pre_eeg.edf  23.9 MB  (4.2 s)
+    ✔ Downloading [2/4] sub-325_ses-1_task-EyesClosed_acq-post_eeg.edf  25.4 MB  (4.2 s)
+    ✔ Downloading [3/4] sub-325_ses-1_task-EyesOpen_acq-pre_eeg.edf  23.8 MB  (3.9 s)
+    ✔ Downloading [4/4] sub-325_ses-1_task-EyesOpen_acq-post_eeg.edf  23.8 MB  (5.2 s)
+    ✔ Downloaded 8 small side file(s) (json / events.tsv)
+    → participants.tsv cross-check: participants.tsv not found (check skipped)
+
+  Step 3/5  Quality-control analysis
+    ✔ 4 of 4 expected EDF files are on disk.
+    ✔ Analysing recording 1/4: ses-1  EyesClosed  pre  (4.4 s)
+    ✔ Analysing recording 2/4: ses-1  EyesClosed  post  (4.5 s)
+    ✔ Analysing recording 3/4: ses-1  EyesOpen  pre  (4.7 s)
+    ✔ Analysing recording 4/4: ses-1  EyesOpen  post  (4.1 s)
+    Verdict per recording
+      ses-1  EC  pre   PASS    USABLE                      alpha EC/EO 4.5 | 50 Hz 2 dB
+      ses-1  EC  post  PASS    USABLE                      alpha EC/EO 4.8 | 50 Hz 4 dB
+      ses-1  EO  pre   PASS    USABLE                      50 Hz 5 dB
+      ses-1  EO  post  PASS    USABLE                      50 Hz 4 dB
+
+  Step 4/5  Saving tables, figures and report
+    ✔ Saving tables (CSV)  7 files  (0.0 s)
+    ✔ Drawing figures (A-G and the channel quality topomap)  11 figures saved  (16.1 s)
+    ✔ Writing the report and the run manifest  (0.4 s)
+
+  Step 5/5  Clean-up
+    ✔ Deleting the analysed data (data folder and DataLad copy)  12 data file(s) deleted, 0 DataLad file(s) dropped, 97 MB freed  (0.0 s)
+
+----------------------------------------------------------------------------------------------------
+ RESULT   COMPLETED   QC verdict: PASS   USABLE
+          overall PASS; USABLE: 4/4 recordings usable; no bad channels; alpha blocking OK (median
+          4.7)
+          status file: qc_output/sub-325/status.txt
+----------------------------------------------------------------------------------------------------
