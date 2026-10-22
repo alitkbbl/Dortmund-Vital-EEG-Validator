@@ -1,0 +1,12 @@
+# Python 3.10 or newer
+mne>=1.6
+edfio
+numpy
+scipy
+pandas
+matplotlib
+openpyxl          # for the Excel overview (summary_all_subjects.xlsx); without it only the CSV is written
+
+# Optional (recommended): exact dataset version 1.0.3 via DataLad. Also needs git-annex (not a pip package):
+#   pip install datalad
+# Without them use:  --download-method https
