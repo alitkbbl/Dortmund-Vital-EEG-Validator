@@ -1,6 +1,8 @@
-# 📊 Excel guide: every sheet and column
+# 🗂️ Excel Guide — Every Sheet & Column
 
-This guide describes [`summary_all_subjects.xlsx`](../summary_all_subjects.xlsx): the automatic QC summary of all 608 subjects of [OpenNeuro ds005385 v1.0.3](https://openneuro.org/datasets/ds005385/versions/1.0.3), produced with QC logic version `screening-2.2`. The CSV file [`summary_all_subjects.csv`](../summary_all_subjects.csv) is identical to the `Subjects` sheet. Back to the [main README](../README.md).
+This guide documents [`summary_all_subjects.xlsx`](../summary_all_subjects.xlsx): the automatic QC summary for all **608 subjects** in [OpenNeuro ds005385 v1.0.3](https://openneuro.org/datasets/ds005385/versions/1.0.3), generated with QC logic version `screening-2.2`.
+
+> **CSV equivalent:** [`summary_all_subjects.csv`](../summary_all_subjects.csv) is identical to the `Subjects` sheet.
 
 **Contents**
 
