@@ -1,0 +1,382 @@
+{
+  "script": "qc_eeg_subject.py",
+  "script_sha256": "44a602e2f99843fb95c443cdd833b2d39c3d1fc7a74c636d3b79519eaa6c520f",
+  "qc_logic_version": "screening-2.2",
+  "qc_signature": "40d2ea6566ac1ac5",
+  "started": "2026-10-21T17:11:34+03:30",
+  "run_seconds": 305.9,
+  "command_line": [
+    "qc_eeg_subject.py",
+    "28",
+    "53"
+  ],
+  "arguments": {
+    "subjects": "['28', '53']",
+    "data_dir": "data",
+    "repo_dir": "ds005385_repo",
+    "out_root": "qc_output",
+    "dataset_version": "1.0.3",
+    "download_method": "auto",
+    "no_download": "False",
+    "force_download": "False",
+    "force_reanalysis": "False",
+    "keep_data": "False",
+    "verify_table": "None",
+    "stop_after_failures": "3",
+    "debug": "False"
+  },
+  "subject": "sub-028",
+  "participants_row": {
+    "sex": "M",
+    "age": "48",
+    "handedness": "right",
+    "session1": "yes",
+    "late_ses1": "0",
+    "session2": "yes",
+    "late_ses2": "0"
+  },
+  "eligibility": {
+    "ok": true,
+    "sessions_analysed": [
+      "ses-1",
+      "ses-2"
+    ],
+    "notes": []
+  },
+  "dataset": {
+    "id": "ds005385",
+    "version_requested": "1.0.3",
+    "Name": "Resting-state EEG data before and after cognitive activity across the adult lifespan and a 5-year follow-up",
+    "BIDSVersion": "1.9.0",
+    "License": "CC0",
+    "DatasetDOI": "doi:10.18112/openneuro.ds005385.v1.0.3"
+  },
+  "download": {
+    "method": "datalad",
+    "repo_commit": "6a558cd5852503e66df9ac7fdac2f3a7f4ed5f12",
+    "repo_tag": "1.0.3",
+    "downloaded": [
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_eeg.edf",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_eeg.edf",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_eeg.edf",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_eeg.edf",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_eeg.edf",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_eeg.edf",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_eeg.edf",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_eeg.edf",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_eeg.json",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_events.tsv",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_eeg.json",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_events.tsv",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_eeg.json",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_events.tsv",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_eeg.json",
+      "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_events.tsv",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_eeg.json",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_events.tsv",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_eeg.json",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_events.tsv",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_eeg.json",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_events.tsv",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_eeg.json",
+      "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_events.tsv"
+    ],
+    "already_present": [],
+    "not_in_dataset": [],
+    "failed": [],
+    "participants_tsv_crosscheck": "OK, the embedded row is identical to ds005385_repo/participants.tsv"
+  },
+  "participants_tsv_crosscheck": "OK, the embedded row is identical to ds005385_repo/participants.tsv",
+  "software": {
+    "python": "3.13.5",
+    "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
+    "mne": "1.12.1",
+    "edfio": null,
+    "numpy": "2.1.3",
+    "scipy": "1.15.3",
+    "pandas": "2.3.3",
+    "matplotlib": "3.10.0",
+    "datalad": "1.7.1"
+  },
+  "config": {
+    "expected_n_eeg_channels": 64,
+    "expected_sfreq_hz": 1000.0,
+    "duration_ok_range_s": [
+      120.0,
+      240.0
+    ],
+    "duration_fail_below_s": 60.0,
+    "required_channels": [
+      "O1",
+      "O2",
+      "Oz"
+    ],
+    "non_eeg_name_hints": [
+      "EOG",
+      "VEOG",
+      "HEOG",
+      "ECG",
+      "EKG",
+      "EMG",
+      "TRIG",
+      "STI",
+      "STATUS"
+    ],
+    "edf_min_size_mb": 1.0,
+    "detrend_method": "highpass",
+    "detrend_hp_hz": 0.5,
+    "detrend_hp_order": 2,
+    "flat_std_uv": 0.1,
+    "clip_fraction": 0.001,
+    "frozen_min_samples": 100,
+    "noisy_ratio": 4.0,
+    "noisy_min_uv": 50.0,
+    "global_frozen_flag_s": 5.0,
+    "global_frozen_fail_fraction": 0.1,
+    "corr_threshold": 0.2,
+    "corr_relaxed_channels": [
+      "O1",
+      "O2",
+      "Oz"
+    ],
+    "corr_threshold_relaxed": 0.18,
+    "corr_window_s": 5.0,
+    "corr_band_hz": [
+      1.0,
+      45.0
+    ],
+    "corr_target_fs_hz": 125.0,
+    "corr_unreliable_fraction": 0.5,
+    "critical_channels": [
+      "Cz",
+      "Fz",
+      "Pz",
+      "O1",
+      "O2"
+    ],
+    "critical_bad_fail_min": 2,
+    "interpolatable_max_channels": 6,
+    "typical_amp_min_uv": 1.0,
+    "typical_amp_max_uv": 100.0,
+    "high_amp_channel_fraction": 0.1,
+    "dc_offset_info_uv": 100.0,
+    "drift_info_uv": 50.0,
+    "psd_channels": [
+      "O1",
+      "O2",
+      "Oz"
+    ],
+    "welch_window_s": 4.0,
+    "welch_overlap": 0.5,
+    "alpha_band_hz": [
+      8.0,
+      12.0
+    ],
+    "alpha_flank_hz": [
+      [
+        4.0,
+        7.0
+      ],
+      [
+        13.0,
+        16.0
+      ]
+    ],
+    "alpha_prominence_min_db": 3.0,
+    "alpha_ratio_pass": 1.5,
+    "alpha_no_blocking_ratio": 1.0,
+    "dead_spectrum_band_hz": [
+      1.0,
+      45.0
+    ],
+    "dead_spectrum_power_uv2": 0.01,
+    "line_hz": 50.0,
+    "harmonics_hz": [
+      100.0,
+      150.0
+    ],
+    "line_flank_offsets_hz": [
+      2.0,
+      5.0
+    ],
+    "line_peak_halfwidth_hz": 0.5,
+    "line_flag_db": 20.0,
+    "line_high_db": 30.0,
+    "line_saturation_channel_fraction": 0.5,
+    "notch_suggested_db": 10.0
+  },
+  "input_files": [
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_eeg.edf",
+      "kind": "edf",
+      "bytes": 24976896,
+      "sha256": "f66d2c4cefe1ea15e6820c997a2534bf9129d30194102995aa6d722a04acfdbb"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "d6f4dbf63da11aa5b43b321ce85f6816a1a4b98f027a7e65a027a9ddf77e615f"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-pre_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_eeg.edf",
+      "kind": "edf",
+      "bytes": 23936896,
+      "sha256": "02d79e0d2a1688cadefda0df9b7e6bc07d9ca371d15bccd755898e8ef8c4fb16"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "46fb8c9afd77adbb808c6bc755cd7efb8d415a8f8ecc6458296a4b259acbdcfc"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesClosed_acq-post_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_eeg.edf",
+      "kind": "edf",
+      "bytes": 26276896,
+      "sha256": "8e61e6d26c60490fd7235c8cf541861ed06ec2d19ae4507b1b7399e111102241"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "e7b31975f1835f3b37eac6b53c4f5be2e64ea3c7b7836b578c95d438a92b0235"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-pre_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_eeg.edf",
+      "kind": "edf",
+      "bytes": 24586896,
+      "sha256": "8acd8bb1d4cdb48099be54e677759f453fee02460676c18b0ab409d5b6def82a"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "77ccf22ccfb6c7b50fe54ab5597cb231bd159e23ef0efb83bb41d96a51c08630"
+    },
+    {
+      "path": "sub-028/ses-1/eeg/sub-028_ses-1_task-EyesOpen_acq-post_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_eeg.edf",
+      "kind": "edf",
+      "bytes": 24066896,
+      "sha256": "8d40463fbfa99cdd89ecd2a909fd0215c8701b97f440f22bc0343f6b1085bcda"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "e018a6ad5845ef8c03db68044fb5bc496e309e7aaafa1d68142ee2cd799fe1df"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-pre_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_eeg.edf",
+      "kind": "edf",
+      "bytes": 23936896,
+      "sha256": "486e2a1488dd87b33a03b7363abc4037c8bfbed03793b9d917a4354753fb3b26"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "46fb8c9afd77adbb808c6bc755cd7efb8d415a8f8ecc6458296a4b259acbdcfc"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesClosed_acq-post_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_eeg.edf",
+      "kind": "edf",
+      "bytes": 23936896,
+      "sha256": "90f4cdd2c928743a0be15f1945b34019e4a3fc6f05887a1de3dddc5a08959192"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "e018a6ad5845ef8c03db68044fb5bc496e309e7aaafa1d68142ee2cd799fe1df"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-pre_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_eeg.edf",
+      "kind": "edf",
+      "bytes": 24066896,
+      "sha256": "281c6b901cae3c19bc59069a732bb4de8dd2f8f2228b1863948bef7603b81ce7"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_eeg.json",
+      "kind": "json",
+      "bytes": 1087,
+      "sha256": "a98d158f2fbab8239e37e3927f2a42c994d09aee45151fbbe80bb0f1f04c0ba1"
+    },
+    {
+      "path": "sub-028/ses-2/eeg/sub-028_ses-2_task-EyesOpen_acq-post_events.tsv",
+      "kind": "events",
+      "bytes": 35,
+      "sha256": "0cc3a5d93b8ff4f026acdac9d855d9479185e91931374dc2140abbe01dc988a1"
+    }
+  ],
+  "subject_overall_verdict": "FLAG",
+  "figure_warnings": [],
+  "output_files": [
+    "df_channels.csv",
+    "df_recordings.csv",
+    "df_recordings_full.csv",
+    "df_subjects.csv",
+    "figures/A_psd_occipital_sub-028.png",
+    "figures/B_amplitude_heatmap_sub-028.png",
+    "figures/C_traces_sub-028.png",
+    "figures/D_psd_all_channels_sub-028.png",
+    "figures/E_scalp_3d_sub-028.png",
+    "figures/F_overview_sub-028_ses-1_EyesClosed_post.png",
+    "figures/F_overview_sub-028_ses-1_EyesClosed_pre.png",
+    "figures/F_overview_sub-028_ses-1_EyesOpen_post.png",
+    "figures/F_overview_sub-028_ses-1_EyesOpen_pre.png",
+    "figures/F_overview_sub-028_ses-2_EyesClosed_post.png",
+    "figures/F_overview_sub-028_ses-2_EyesClosed_pre.png",
+    "figures/F_overview_sub-028_ses-2_EyesOpen_post.png",
+    "figures/F_overview_sub-028_ses-2_EyesOpen_pre.png",
+    "figures/G_spatial_correlation_sub-028.png",
+    "figures/sub-028_task-rest_channel_quality_topomap.png",
+    "qc_issues.csv",
+    "qc_pivot.csv",
+    "qc_report.txt",
+    "qc_signoff.csv",
+    "run_log.txt"
+  ]
+}

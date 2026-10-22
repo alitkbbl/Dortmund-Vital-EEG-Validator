@@ -1,0 +1,5 @@
+session,ses-1,ses-1,ses-1,ses-1,ses-2,ses-2,ses-2,ses-2
+task,EyesClosed,EyesClosed,EyesOpen,EyesOpen,EyesClosed,EyesClosed,EyesOpen,EyesOpen
+acq,pre,post,pre,post,pre,post,pre,post
+subject,,,,,,,,
+sub-053,FLAG,FAIL,FAIL,FAIL,FLAG,FLAG,PASS,FAIL

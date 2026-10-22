@@ -1,0 +1,60 @@
+
+==================================================================================================================================
+ [2/2]  sub-053     sex F, age 42, right-handed     elapsed 5 min 10 s
+==================================================================================================================================
+
+  Step 1/5  Eligibility check
+    [PASS] Age <= 60              age 42
+    [PASS] Session 1 completed    yes
+    [PASS] No late triggers       late_ses1=0, late_ses2=0
+    [PASS] Session 2 completed    yes
+    ✔ Eligible. Sessions to analyse: ses-1, ses-2
+
+  Step 2/5  Data: download
+    Source: OpenNeuro ds005385 v1.0.3  |  method: datalad  |  8 EDF file(s) to download
+    ✔ Using the existing DataLad repository: ds005385_repo
+    ✔ Downloading [1/8] sub-053_ses-1_task-EyesClosed_acq-pre_eeg.edf  24.2 MB  (26.8 s)
+    ✔ Downloading [2/8] sub-053_ses-1_task-EyesClosed_acq-post_eeg.edf  24.1 MB  (16.9 s)
+    ✔ Downloading [3/8] sub-053_ses-1_task-EyesOpen_acq-pre_eeg.edf  24.2 MB  (12.6 s)
+    ✔ Downloading [4/8] sub-053_ses-1_task-EyesOpen_acq-post_eeg.edf  24.3 MB  (27.6 s)
+    ✔ Downloading [5/8] sub-053_ses-2_task-EyesClosed_acq-pre_eeg.edf  25.5 MB  (18.1 s)
+    ✔ Downloading [6/8] sub-053_ses-2_task-EyesClosed_acq-post_eeg.edf  23.8 MB  (25.1 s)
+    ✔ Downloading [7/8] sub-053_ses-2_task-EyesOpen_acq-pre_eeg.edf  24.1 MB  (14.6 s)
+    ✔ Downloading [8/8] sub-053_ses-2_task-EyesOpen_acq-post_eeg.edf  23.9 MB  (11.2 s)
+    ✔ Copied 16 small side file(s) (json / events.tsv)
+    ✔ participants.tsv cross-check: OK (age, sessions and late triggers match the dataset)
+
+  Step 3/5  Quality-control analysis
+    ✔ 8 of 8 expected EDF files are on disk.
+    ✔ Analysing recording 1/8: ses-1  EyesClosed  pre  (1.4 s)
+    ✔ Analysing recording 2/8: ses-1  EyesClosed  post  (1.4 s)
+    ✔ Analysing recording 3/8: ses-1  EyesOpen  pre  (1.3 s)
+    ✔ Analysing recording 4/8: ses-1  EyesOpen  post  (1.4 s)
+    ✔ Analysing recording 5/8: ses-2  EyesClosed  pre  (1.4 s)
+    ✔ Analysing recording 6/8: ses-2  EyesClosed  post  (1.4 s)
+    ✔ Analysing recording 7/8: ses-2  EyesOpen  pre  (1.3 s)
+    ✔ Analysing recording 8/8: ses-2  EyesOpen  post  (1.4 s)
+    Verdict per recording
+      ses-1  EC  pre   FLAG    USABLE_NEEDS_INTERPOLATION  bad: Fz (uncorrelated), F4 (uncorrelated), AF4 (uncorrelated), F1 (uncorrelated), F2 (uncorrelated) | alpha EC/EO 2.7 | 50 Hz 6 dB
+      ses-1  EC  post  FAIL    REJECT                      bad: F3 (uncorrelated), Fz (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), C3 (uncorrelated), F1 (uncorrelated), F2 (uncorrelated), FC3 (uncorrelated), C5 (uncorrelated) | alpha EC/EO 8.0 | 50 Hz 5 dB
+      ses-1  EO  pre   FAIL    REJECT                      bad: F8 (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), F6 (uncorrelated), FC3 (uncorrelated), FC4 (uncorrelated) | 50 Hz 7 dB
+      ses-1  EO  post  FAIL    REJECT                      bad: FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), FC6 (uncorrelated), FC3 (uncorrelated), FC4 (uncorrelated), C5 (uncorrelated) | 50 Hz 8 dB
+      ses-2  EC  pre   FLAG    USABLE_NEEDS_INTERPOLATION  bad: Fz (uncorrelated), F1 (uncorrelated), F2 (uncorrelated) | alpha EC/EO 12.1 | 50 Hz 2 dB
+      ses-2  EC  post  FLAG    USABLE_NEEDS_INTERPOLATION  bad: Fz (uncorrelated), F2 (uncorrelated) | alpha EC/EO 4.1 | 50 Hz 4 dB
+      ses-2  EO  pre   PASS    USABLE_NEEDS_INTERPOLATION  bad: FC2 (uncorrelated) | 50 Hz 1 dB
+      ses-2  EO  post  FAIL    REJECT                      bad: FC1 (uncorrelated), FC2 (uncorrelated), T7 (noisy), T8 (noisy), FC3 (uncorrelated), FC4 (uncorrelated), C5 (uncorrelated) | 50 Hz 4 dB
+
+  Step 4/5  Saving tables, figures and report
+    ✔ Saving tables (CSV)  7 files  (0.0 s)
+    ✔ Drawing figures (A-G and the channel quality topomap)  15 figures saved  (6.0 s)
+    ✔ Writing the report and the run manifest  (0.1 s)
+
+  Step 5/5  Clean-up
+    ✔ Deleting the analysed data (data folder and DataLad copy)  24 data file(s) deleted, 8 DataLad file(s) dropped, 388 MB freed  (3.6 s)
+
+----------------------------------------------------------------------------------------------------------------------------------
+ RESULT   COMPLETED   QC verdict: FAIL   PARTIALLY_USABLE
+          overall FAIL; PARTIALLY_USABLE: 4/8 recordings usable; bad channels in 8 recording(s) (FC1, FC3, F2); alpha blocking
+          OK (median 6.1)
+          status file: qc_output/sub-053/status.txt
+----------------------------------------------------------------------------------------------------------------------------------

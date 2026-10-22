@@ -1,0 +1,2 @@
+subject,sex,age,sessions_analysed,n_recordings,n_PASS,n_FLAG,n_FAIL,n_MISSING,n_USABLE,n_USABLE_WITH_FLAGS,n_USABLE_NEEDS_INTERPOLATION,n_REJECT,overall,label,channels_flagged_bad (count of recordings)
+sub-028,M,48,"ses-1, ses-2",8,2,6,0,0,0,2,6,0,FLAG,USABLE_NEEDS_INTERPOLATION,"F5 x4, F6 x4, F7 x2, F3 x2, F4 x2, Fz x2"

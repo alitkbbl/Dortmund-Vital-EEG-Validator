@@ -1,0 +1,110 @@
+============================================================================
+STATUS  sub-028     COMPLETED     QC verdict: FLAG     USABLE_NEEDS_INTERPOLATION
+============================================================================
+Summary     : overall FLAG; USABLE_NEEDS_INTERPOLATION: 8/8 recordings
+              usable; bad channels in 6 recording(s) (F5, F6, F3); alpha
+              blocking OK (median 4.5); notch filter suggested for 4/8
+              recordings
+Started     : 2026-10-21T17:11:34+03:30
+Finished    : 2026-10-21T17:16:44+03:30   (duration 309.5 s)
+Participant : sex M, age 48, handedness right
+QC logic    : screening-2.2   (fingerprint 40d2ea6566ac1ac5)
+
+ELIGIBILITY  ->  eligible
+  [PASS] Age <= 60              age 48
+  [PASS] Session 1 completed    yes
+  [PASS] No late triggers       late_ses1=0, late_ses2=0
+  [PASS] Session 2 completed    yes
+  Sessions analysed: ses-1, ses-2
+
+DATA
+  Download method : datalad | dataset tag 1.0.3 | commit 6a558cd58525
+  Files           : downloaded 24 | already on disk 0 | not in the dataset 0 | failed 0
+  participants.tsv cross-check: OK, the embedded row is identical to ds005385_repo/participants.tsv
+
+QC RESULT (first-pass screening)
+  Subject verdict : FLAG   screening label: USABLE_NEEDS_INTERPOLATION
+  Recordings      : expected 8 | PASS 2, FLAG 6, FAIL 0, MISSING 0
+  Screening       : usable as is 0 | usable with flags 2 | needs interpolation 6 | rejected 0
+
+  session       task  acq verdict                      label n_bad        bad_channels alpha_EC/EO 50Hz_dB
+    ses-1 EyesClosed  pre    FLAG          USABLE_WITH_FLAGS     0                   -        4.98    1.15
+    ses-1 EyesClosed post    FLAG          USABLE_WITH_FLAGS     0                   -       31.99    0.23
+    ses-1   EyesOpen  pre    PASS USABLE_NEEDS_INTERPOLATION     2              F5, F6        4.98    3.67
+    ses-1   EyesOpen post    PASS USABLE_NEEDS_INTERPOLATION     5  F7, F3, F4, F5, F6       31.99     2.1
+    ses-2 EyesClosed  pre    FLAG USABLE_NEEDS_INTERPOLATION     1                  Fz        0.17   24.07
+    ses-2 EyesClosed post    FLAG USABLE_NEEDS_INTERPOLATION     1                  Fz        4.01   20.96
+    ses-2   EyesOpen  pre    FLAG USABLE_NEEDS_INTERPOLATION     5 F3, F4, AF8, F5, F6        0.17   20.78
+    ses-2   EyesOpen post    FLAG USABLE_NEEDS_INTERPOLATION     4     F7, FC2, F5, F6        4.01   23.13
+
+  Reason codes:
+   - ses-1 EyesClosed pre: LOW_ALPHA_PROMINENCE
+   - ses-1 EyesClosed post: LOW_ALPHA_PROMINENCE
+   - ses-1 EyesOpen pre: USABLE_NEEDS_INTERPOLATION
+   - ses-1 EyesOpen post: USABLE_NEEDS_INTERPOLATION
+   - ses-2 EyesClosed pre: CRITICAL_CHANNEL_BAD; LINE_NOISE; LOW_ALPHA_PROMINENCE; NO_ALPHA_BLOCKING; USABLE_NEEDS_INTERPOLATION
+   - ses-2 EyesClosed post: CRITICAL_CHANNEL_BAD; LINE_NOISE; LOW_ALPHA_PROMINENCE; USABLE_NEEDS_INTERPOLATION
+   - ses-2 EyesOpen pre: LINE_NOISE; NO_ALPHA_BLOCKING; USABLE_NEEDS_INTERPOLATION
+   - ses-2 EyesOpen post: LINE_NOISE; USABLE_NEEDS_INTERPOLATION
+
+  Key findings:
+   - Recordings: 8 expected  |  PASS 2  |  FLAG 6  |  FAIL 0  |  MISSING 0
+   - Screening: 8 of 8 analysed recordings are usable (as they are 0, with flags 2, after interpolation 6); rejected 0
+   - Recordings with at least one bad channel (flat, clipped, noisy or uncorrelated): 6 of 8
+   - Channels flagged most often: F5 (x4), F6 (x4), F3 (x2), F4 (x2), F7 (x2), Fz (x2)
+   - Spatially uncorrelated channels (|r| < 0.2; 0.18 for O1/O2/Oz) in 6 recording(s)
+   - Critical channels (Cz, Fz, Pz, O1, O2) bad in 2 recording(s): Fz
+   - Alpha blocking (Eyes Closed / Eyes Open power on O1, O2, Oz): median ratio 4.50; 3 of 4 pairs at or above 1.5 (weak alpha is only a FLAG: about 10-15% of healthy people are alpha non-responders)
+   - 50 Hz line noise: median 12.2 dB above its flanks; a notch filter is suggested for 4 of 8 recordings (above 10 dB)
+
+  Needs attention:
+   - ses-1 EyesClosed pre: FLAG LOW_ALPHA_PROMINENCE - alpha_peak_prominence_db = -0.61 (expected: at least 3 dB in Eyes Closed)
+   - ses-1 EyesClosed post: FLAG LOW_ALPHA_PROMINENCE - alpha_peak_prominence_db = -1.252 (expected: at least 3 dB in Eyes Closed)
+   - ses-2 EyesClosed pre: FLAG CRITICAL_CHANNEL_BAD - critical_channel_bad = Fz (expected: none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated))
+   - ses-2 EyesClosed pre: FLAG LINE_NOISE - line_50Hz_db = 24.075 (expected: at most 20 dB)
+   - ses-2 EyesClosed pre: FLAG LOW_ALPHA_PROMINENCE - alpha_peak_prominence_db = 1.015 (expected: at least 3 dB in Eyes Closed)
+   - ses-2 EyesClosed pre: FLAG NO_ALPHA_BLOCKING - alpha_ratio_EC_EO = 0.172 (expected: at least 1.0 on one channel)
+   - ses-2 EyesClosed post: FLAG CRITICAL_CHANNEL_BAD - critical_channel_bad = Fz (expected: none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated))
+   - ses-2 EyesClosed post: FLAG LINE_NOISE - line_50Hz_db = 20.959 (expected: at most 20 dB)
+   - ses-2 EyesClosed post: FLAG LOW_ALPHA_PROMINENCE - alpha_peak_prominence_db = -0.47 (expected: at least 3 dB in Eyes Closed)
+   - ses-2 EyesOpen pre: FLAG LINE_NOISE - line_50Hz_db = 20.776 (expected: at most 20 dB)
+   - ses-2 EyesOpen pre: FLAG NO_ALPHA_BLOCKING - alpha_ratio_EC_EO = 0.172 (expected: at least 1.0 on one channel)
+   - ses-2 EyesOpen post: FLAG LINE_NOISE - line_50Hz_db = 23.131 (expected: at most 20 dB)
+   - ses-1 EyesOpen pre: NOTE USABLE_NEEDS_INTERPOLATION - F5 (uncorrelated), F6 (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+   - ses-1 EyesOpen post: NOTE USABLE_NEEDS_INTERPOLATION - F7 (uncorrelated), F3 (uncorrelated), F4 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+   - ses-2 EyesClosed pre: NOTE USABLE_NEEDS_INTERPOLATION - Fz (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+   - ses-2 EyesClosed post: NOTE USABLE_NEEDS_INTERPOLATION - Fz (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+   - ses-2 EyesOpen pre: NOTE USABLE_NEEDS_INTERPOLATION - F3 (uncorrelated), F4 (uncorrelated), AF8 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+   - ses-2 EyesOpen post: NOTE USABLE_NEEDS_INTERPOLATION - F7 (uncorrelated), FC2 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated) (1-6 bad channels can be interpolated; the recording stays usable)
+
+CLEAN-UP
+  Analysed data deleted: 24 file(s) in the data folder, 8 DataLad file(s) dropped, 392 MB freed
+
+FILES (relative to this folder)
+  status.txt
+  status.json
+  qc_results/df_channels.csv
+  qc_results/df_recordings.csv
+  qc_results/df_recordings_full.csv
+  qc_results/df_subjects.csv
+  qc_results/qc_issues.csv
+  qc_results/qc_pivot.csv
+  qc_results/qc_report.txt
+  qc_results/qc_signoff.csv
+  qc_results/run_log.txt
+  qc_results/run_manifest.json
+  qc_results/figures/A_psd_occipital_sub-028.png
+  qc_results/figures/B_amplitude_heatmap_sub-028.png
+  qc_results/figures/C_traces_sub-028.png
+  qc_results/figures/D_psd_all_channels_sub-028.png
+  qc_results/figures/E_scalp_3d_sub-028.png
+  qc_results/figures/F_overview_sub-028_ses-1_EyesClosed_post.png
+  qc_results/figures/F_overview_sub-028_ses-1_EyesClosed_pre.png
+  qc_results/figures/F_overview_sub-028_ses-1_EyesOpen_post.png
+  qc_results/figures/F_overview_sub-028_ses-1_EyesOpen_pre.png
+  qc_results/figures/F_overview_sub-028_ses-2_EyesClosed_post.png
+  qc_results/figures/F_overview_sub-028_ses-2_EyesClosed_pre.png
+  qc_results/figures/F_overview_sub-028_ses-2_EyesOpen_post.png
+  qc_results/figures/F_overview_sub-028_ses-2_EyesOpen_pre.png
+  qc_results/figures/G_spatial_correlation_sub-028.png
+  qc_results/figures/sub-028_task-rest_channel_quality_topomap.png

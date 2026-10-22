@@ -1,0 +1,19 @@
+subject,session,task,acq,layer,code,finding,value,limit,verdict
+sub-028,ses-1,EyesClosed,pre,spectral,LOW_ALPHA_PROMINENCE,alpha_peak_prominence_db,-0.61,at least 3 dB in Eyes Closed,FLAG
+sub-028,ses-1,EyesClosed,post,spectral,LOW_ALPHA_PROMINENCE,alpha_peak_prominence_db,-1.252,at least 3 dB in Eyes Closed,FLAG
+sub-028,ses-2,EyesClosed,pre,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-028,ses-2,EyesClosed,pre,spectral,LINE_NOISE,line_50Hz_db,24.075,at most 20 dB,FLAG
+sub-028,ses-2,EyesClosed,pre,spectral,LOW_ALPHA_PROMINENCE,alpha_peak_prominence_db,1.015,at least 3 dB in Eyes Closed,FLAG
+sub-028,ses-2,EyesClosed,pre,spectral,NO_ALPHA_BLOCKING,alpha_ratio_EC_EO,0.172,at least 1.0 on one channel,FLAG
+sub-028,ses-2,EyesClosed,post,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-028,ses-2,EyesClosed,post,spectral,LINE_NOISE,line_50Hz_db,20.959,at most 20 dB,FLAG
+sub-028,ses-2,EyesClosed,post,spectral,LOW_ALPHA_PROMINENCE,alpha_peak_prominence_db,-0.47,at least 3 dB in Eyes Closed,FLAG
+sub-028,ses-2,EyesOpen,pre,spectral,LINE_NOISE,line_50Hz_db,20.776,at most 20 dB,FLAG
+sub-028,ses-2,EyesOpen,pre,spectral,NO_ALPHA_BLOCKING,alpha_ratio_EC_EO,0.172,at least 1.0 on one channel,FLAG
+sub-028,ses-2,EyesOpen,post,spectral,LINE_NOISE,line_50Hz_db,23.131,at most 20 dB,FLAG
+sub-028,ses-1,EyesOpen,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"F5 (uncorrelated), F6 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-028,ses-1,EyesOpen,post,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"F7 (uncorrelated), F3 (uncorrelated), F4 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-028,ses-2,EyesClosed,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,Fz (uncorrelated),1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-028,ses-2,EyesClosed,post,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,Fz (uncorrelated),1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-028,ses-2,EyesOpen,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"F3 (uncorrelated), F4 (uncorrelated), AF8 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-028,ses-2,EyesOpen,post,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"F7 (uncorrelated), FC2 (uncorrelated), F5 (uncorrelated), F6 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS

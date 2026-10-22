@@ -1,0 +1,67 @@
+========================================================================
+QC REPORT  sub-053   (OpenNeuro ds005385, dataset version 1.0.3; first-pass screening)
+========================================================================
+Generated   : 2026-10-21T17:19:34+03:30
+QC logic    : screening-2.2
+Participant : sex F, age 42, handedness right
+Sessions    : ses-1, ses-2
+Download    : datalad | repo commit 6a558cd58525 | tag 1.0.3
+participants.tsv cross-check: OK, the embedded row is identical to ds005385_repo/participants.tsv
+
+SCREENING DECISION
+  Subject: verdict FAIL, label PARTIALLY_USABLE
+  Labels: USABLE = nothing to note | USABLE_WITH_FLAGS = usable, flags worth a look | USABLE_NEEDS_INTERPOLATION = usable after interpolating the bad channels | REJECT = FAIL, not usable
+  Subject level: PARTIALLY_USABLE = some recordings are usable and some are rejected (keep the usable ones).
+  Only a FAIL is rejected. Bad channels (up to 6, at most one critical) are repairable; weak alpha and 50 Hz line noise are FLAGS only.
+
+KEY FINDINGS
+  Recordings: 8 expected  |  PASS 1  |  FLAG 3  |  FAIL 4  |  MISSING 0
+  Screening: 4 of 8 analysed recordings are usable (as they are 0, with flags 0, after interpolation 4); rejected 4
+  Recordings with at least one bad channel (flat, clipped, noisy or uncorrelated): 8 of 8
+  Channels flagged most often: FC1 (x4), FC3 (x4), F2 (x4), Fz (x4), FC2 (x4), C5 (x3)
+  Spatially uncorrelated channels (|r| < 0.2; 0.18 for O1/O2/Oz) in 8 recording(s)
+  Critical channels (Cz, Fz, Pz, O1, O2) bad in 4 recording(s): Fz
+  Alpha blocking (Eyes Closed / Eyes Open power on O1, O2, Oz): median ratio 6.06; 4 of 4 pairs at or above 1.5 (weak alpha is only a FLAG: about 10-15% of healthy people are alpha non-responders)
+  50 Hz line noise: median 4.8 dB above its flanks; a notch filter is suggested for 0 of 8 recordings (above 10 dB)
+
+VERDICT PER RECORDING (PASS = nothing to note, FLAG = small problem, FAIL = clear problem, MISSING = file not available)
+session       task  acq overall                      label verdict_header verdict_integrity verdict_amplitude verdict_spectral verdict_consistency  n_bad_channels  n_critical_bad  alpha_ratio_EC_EO  line50_db
+  ses-1 EyesClosed  pre    FLAG USABLE_NEEDS_INTERPOLATION           PASS              FLAG              PASS             PASS                PASS               5               1               2.68       6.49
+  ses-1 EyesClosed post    FAIL                     REJECT           PASS              FAIL              PASS             PASS                PASS               9               1               8.02       5.47
+  ses-1   EyesOpen  pre    FAIL                     REJECT           PASS              FAIL              PASS             PASS                PASS               7               0               2.68       6.96
+  ses-1   EyesOpen post    FAIL                     REJECT           PASS              FAIL              PASS             PASS                PASS               7               0               8.02       8.21
+  ses-2 EyesClosed  pre    FLAG USABLE_NEEDS_INTERPOLATION           PASS              FLAG              PASS             PASS                PASS               3               1              12.12       2.18
+  ses-2 EyesClosed post    FLAG USABLE_NEEDS_INTERPOLATION           PASS              FLAG              PASS             PASS                PASS               2               1               4.10       4.19
+  ses-2   EyesOpen  pre    PASS USABLE_NEEDS_INTERPOLATION           PASS              PASS              PASS             PASS                PASS               1               0              12.12       1.09
+  ses-2   EyesOpen post    FAIL                     REJECT           PASS              FAIL              PASS             PASS                PASS               7               0               4.10       3.68
+
+REASON CODES PER RECORDING
+session       task  acq                                            codes
+  ses-1 EyesClosed  pre CRITICAL_CHANNEL_BAD; USABLE_NEEDS_INTERPOLATION
+  ses-1 EyesClosed post      CRITICAL_CHANNEL_BAD; TOO_MANY_BAD_CHANNELS
+  ses-1   EyesOpen  pre                            TOO_MANY_BAD_CHANNELS
+  ses-1   EyesOpen post                            TOO_MANY_BAD_CHANNELS
+  ses-2 EyesClosed  pre CRITICAL_CHANNEL_BAD; USABLE_NEEDS_INTERPOLATION
+  ses-2 EyesClosed post CRITICAL_CHANNEL_BAD; USABLE_NEEDS_INTERPOLATION
+  ses-2   EyesOpen  pre                       USABLE_NEEDS_INTERPOLATION
+  ses-2   EyesOpen post                            TOO_MANY_BAD_CHANNELS
+
+FINDINGS (FAIL / MISSING / FLAG, and PASS notes with a code): 12
+subject session       task  acq     layer                       code                     finding                                                                                      value                                                            limit verdict
+sub-053   ses-1 EyesClosed post integrity      TOO_MANY_BAD_CHANNELS          bad_channels_total 9: F3 (uncorrelated), Fz (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), C3 (un...                 at most 6 (more cannot be interpolated reliably)    FAIL
+sub-053   ses-1   EyesOpen  pre integrity      TOO_MANY_BAD_CHANNELS          bad_channels_total 7: F8 (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), F6 (u...                 at most 6 (more cannot be interpolated reliably)    FAIL
+sub-053   ses-1   EyesOpen post integrity      TOO_MANY_BAD_CHANNELS          bad_channels_total 7: FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), FC6 (uncorrelated), FC3 ...                 at most 6 (more cannot be interpolated reliably)    FAIL
+sub-053   ses-2   EyesOpen post integrity      TOO_MANY_BAD_CHANNELS          bad_channels_total 7: FC1 (uncorrelated), FC2 (uncorrelated), T7 (noisy), T8 (noisy), FC3 (uncorrelated), ...                 at most 6 (more cannot be interpolated reliably)    FAIL
+sub-053   ses-1 EyesClosed  pre integrity       CRITICAL_CHANNEL_BAD        critical_channel_bad                                                                                         Fz         none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)    FLAG
+sub-053   ses-1 EyesClosed post integrity       CRITICAL_CHANNEL_BAD        critical_channel_bad                                                                                         Fz         none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)    FLAG
+sub-053   ses-2 EyesClosed  pre integrity       CRITICAL_CHANNEL_BAD        critical_channel_bad                                                                                         Fz         none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)    FLAG
+sub-053   ses-2 EyesClosed post integrity       CRITICAL_CHANNEL_BAD        critical_channel_bad                                                                                         Fz         none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)    FLAG
+sub-053   ses-1 EyesClosed  pre integrity USABLE_NEEDS_INTERPOLATION bad_channels_to_interpolate Fz (uncorrelated), F4 (uncorrelated), AF4 (uncorrelated), F1 (uncorrelated), F2 (uncorr... 1-6 bad channels can be interpolated; the recording stays usable    PASS
+sub-053   ses-2 EyesClosed  pre integrity USABLE_NEEDS_INTERPOLATION bad_channels_to_interpolate                                    Fz (uncorrelated), F1 (uncorrelated), F2 (uncorrelated) 1-6 bad channels can be interpolated; the recording stays usable    PASS
+sub-053   ses-2 EyesClosed post integrity USABLE_NEEDS_INTERPOLATION bad_channels_to_interpolate                                                       Fz (uncorrelated), F2 (uncorrelated) 1-6 bad channels can be interpolated; the recording stays usable    PASS
+sub-053   ses-2   EyesOpen  pre integrity USABLE_NEEDS_INTERPOLATION bad_channels_to_interpolate                                                                         FC2 (uncorrelated) 1-6 bad channels can be interpolated; the recording stays usable    PASS
+
+SIGN-OFF (the suggestion is only a hint; the reviewer decides)
+subject overall_verdict  screening_label                                       suggested_decision reviewer       date decision (accept / accept with note / re-check)
+sub-053            FAIL PARTIALLY_USABLE accept the usable recordings; re-check the rejected ones          2026-10-21                                                
+

@@ -1,0 +1,13 @@
+subject,session,task,acq,layer,code,finding,value,limit,verdict
+sub-053,ses-1,EyesClosed,post,integrity,TOO_MANY_BAD_CHANNELS,bad_channels_total,"9: F3 (uncorrelated), Fz (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), C3 (uncorrelated), F1 (uncorrelated), F2 (uncorrelated), FC3 (uncorrelated), C5 (uncorrelated)",at most 6 (more cannot be interpolated reliably),FAIL
+sub-053,ses-1,EyesOpen,pre,integrity,TOO_MANY_BAD_CHANNELS,bad_channels_total,"7: F8 (uncorrelated), FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), F6 (uncorrelated), FC3 (uncorrelated), FC4 (uncorrelated)",at most 6 (more cannot be interpolated reliably),FAIL
+sub-053,ses-1,EyesOpen,post,integrity,TOO_MANY_BAD_CHANNELS,bad_channels_total,"7: FC5 (uncorrelated), FC1 (uncorrelated), FC2 (uncorrelated), FC6 (uncorrelated), FC3 (uncorrelated), FC4 (uncorrelated), C5 (uncorrelated)",at most 6 (more cannot be interpolated reliably),FAIL
+sub-053,ses-2,EyesOpen,post,integrity,TOO_MANY_BAD_CHANNELS,bad_channels_total,"7: FC1 (uncorrelated), FC2 (uncorrelated), T7 (noisy), T8 (noisy), FC3 (uncorrelated), FC4 (uncorrelated), C5 (uncorrelated)",at most 6 (more cannot be interpolated reliably),FAIL
+sub-053,ses-1,EyesClosed,pre,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-053,ses-1,EyesClosed,post,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-053,ses-2,EyesClosed,pre,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-053,ses-2,EyesClosed,post,integrity,CRITICAL_CHANNEL_BAD,critical_channel_bad,Fz,"none of Cz, Fz, Pz, O1, O2 bad (one can be interpolated)",FLAG
+sub-053,ses-1,EyesClosed,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"Fz (uncorrelated), F4 (uncorrelated), AF4 (uncorrelated), F1 (uncorrelated), F2 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-053,ses-2,EyesClosed,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"Fz (uncorrelated), F1 (uncorrelated), F2 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-053,ses-2,EyesClosed,post,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,"Fz (uncorrelated), F2 (uncorrelated)",1-6 bad channels can be interpolated; the recording stays usable,PASS
+sub-053,ses-2,EyesOpen,pre,integrity,USABLE_NEEDS_INTERPOLATION,bad_channels_to_interpolate,FC2 (uncorrelated),1-6 bad channels can be interpolated; the recording stays usable,PASS
