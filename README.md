@@ -8,7 +8,7 @@
 
 <br>
 
-![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Subjects](https://img.shields.io/badge/Cohort-608%20Subjects%20%7C%202200%2B%20Runs-purple)
 ![License](https://img.shields.io/badge/license-MIT-2ea44f)
 ![Dataset](https://img.shields.io/badge/OpenNeuro-ds005385%20v1.0.3-f28c28)
 ![MNE](https://img.shields.io/badge/built%20with-MNE--Python-1f77b4)
