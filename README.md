@@ -120,7 +120,7 @@ cd dortmund-vital-eeg-validator
 pip install mne edfio numpy scipy pandas matplotlib openpyxl
 ```
 
-Data is downloaded automatically over HTTPS. To pin the exact dataset version 1.0.3, also install [DataLad](https://www.datalad.org/) and [git-annex](https://git-annex.branchable.com/install/); the script then uses them automatically (see `--download-method`).
+Data is downloaded automatically over HTTPS.
 
 ---
 
@@ -161,23 +161,37 @@ Run `python qc_eeg_subject.py --help` for the full text. Exit codes: `0` everyth
 Every subject is shown in five steps (eligibility, download, analysis, saving, clean-up) with a live spinner and timing for each task, then a coloured result block. At the end of a batch you get a summary table. A shortened example (the values are illustrative):
 
 ```text
- [1/2]  sub-002     sex M, age 67, right-handed     elapsed 0 s
+====================================================================================================
+[1/1]  sub-028     sex M, age 48, right-handed     elapsed 54 s
+====================================================================================================
 
   Step 1/5  Eligibility check
-    [FAIL] Age <= 60              age 67 is above the limit
+    [PASS] Age <= 60              age 48
     [PASS] Session 1 completed    yes
-    [PASS] No late triggers       late_ses1=0, late_ses2=n/a
-    ✘ NOT eligible: Age above 60 (67)
+    [PASS] No late triggers       late_ses1=0, late_ses2=0
+    [PASS] Session 2 completed    yes
+    ✔ Eligible. Sessions to analyse: ses-1, ses-2
 
- RESULT   REJECTED
-          Rejected: Age above 60 (67)
-          status file: qc_output/sub-002/status.txt
+  Step 2/5  Data: download
+    Source: OpenNeuro ds005385 v1.0.3  |  method: https  |  8 EDF file(s) to download
+    ! HTTPS downloads the newest OpenNeuro snapshot, which is not guaranteed to be v1.0.3. Use DataLad for an exactly pinned version.
+    → participants.tsv cross-check: participants.tsv not found (check skipped)
 
   Step 3/5  Quality-control analysis
-    ✔ Analysing recording 1/8: ses-1  EyesClosed  pre  (2.6 s)
+    ✔ 8 of 8 expected EDF files are on disk.
+    ✔ Analysing recording 1/8: ses-1  EyesClosed  pre  (5.0 s)
+    ✔ Analysing recording 2/8: ses-1  EyesClosed  post  (4.1 s)
+    ✔ Analysing recording 3/8: ses-1  EyesOpen  pre  (4.6 s)
+    ✔ Analysing recording 4/8: ses-1  EyesOpen  post  (4.6 s)
+    ✔ Analysing recording 5/8: ses-2  EyesClosed  pre  (4.0 s)
+    ✔ Analysing recording 6/8: ses-2  EyesClosed  post  (4.0 s)
+    ✔ Analysing recording 7/8: ses-2  EyesOpen  pre  (4.2 s)
+    ✔ Analysing recording 8/8: ses-2  EyesOpen  post  (4.4 s)
     Verdict per recording
-      ses-1  EC  pre   PASS    USABLE                      alpha EC/EO 11.2 | 50 Hz 15 dB
-      ses-1  EC  post  PASS    USABLE_NEEDS_INTERPOLATION  bad: F3 (noisy+uncorrelated) | alpha EC/EO 9.8 | 50 Hz 16 dB
+
+  Step 4/5  Saving tables, figures and report
+    ✔ Saving tables (CSV)  7 files  (0.1 s)
+    ⠋ Drawing figures (A-G and the channel quality topomap)  5s ....
 ```
 
 ---
