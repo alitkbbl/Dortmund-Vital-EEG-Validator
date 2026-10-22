@@ -13,7 +13,6 @@
 ![MNE](https://img.shields.io/badge/built%20with-MNE--Python-1f77b4)
 ![Subjects](https://img.shields.io/badge/Cohort-608%20Subjects%20%7C%202200%2B%20Runs-purple)
 
-
 <br>
 
 [📊 **Excel: all 608 subjects**](summary_all_subjects.xlsx) ·
