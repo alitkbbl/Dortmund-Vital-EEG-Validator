@@ -1,18 +1,24 @@
 <div align="center">
 
-# 🧠 dortmund-vital-eeg-validator
+#  Dortmund Vital EEG Validator
 
 **First-pass EEG quality screening for the Dortmund Vital Study resting-state dataset**
-[OpenNeuro ds005385](https://openneuro.org/datasets/ds005385/versions/1.0.3) · version 1.0.3
 
-*Download → screen → save → clean up. One subject at a time, so you can check all 608 participants without ever storing the data.*
+*Screen all 608 participants one subject at a time, without ever storing the data.*
+
+<br>
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-2ea44f)
 ![Dataset](https://img.shields.io/badge/OpenNeuro-ds005385%20v1.0.3-f28c28)
 ![MNE](https://img.shields.io/badge/built%20with-MNE--Python-1f77b4)
 
-[📊 **Excel: all 608 subjects**](summary_all_subjects.xlsx) · [🔍 **Example: sub-028**](examples/sub-028/README.md) · [🔍 **Example: sub-053**](examples/sub-053/README.md) · [🔍 **Example: sub-325**](examples/sub-325/README.md) · [📖 **Output guide**](docs/output-guide.md) · [✉️ **Contact**](#17-contact-and-full-outputs)
+<br>
+
+[📊 **Excel: all 608 subjects**](summary_all_subjects.xlsx) ·
+[🔍 **Examples**](#example-three-real-subjects) ·
+[📖 **Output guide**](docs/output-guide.md) ·
+[📧 **Contact**](#16--contact-and-full-outputs)
 
 </div>
 
@@ -26,66 +32,66 @@ python qc_eeg_subject.py 1 to 608    # a range (the whole dataset)
 
 | | |
 |---|---|
-| 🎯 **Triage, not strict QC** | keeps every healthy or repairable recording, rejects only what is catastrophic, and writes a reason code for every decision |
-| ⚡ **One command** | single file, numbers or ranges (`1 5 to 8 12`), automatic download, no data needed beforehand |
-| 🧹 **Disk stays empty** | the data of a subject are deleted right after its analysis, so it also runs on a free Colab session |
-| 🔁 **Resumable** | stop, crash or lose the connection at any time and run the same command again: finished subjects are skipped |
-| 📦 **Complete output** | status file, CSV tables, a channel-quality topomap and 14 more figures, a report, a run manifest, and one Excel file with all subjects |
-| 🧾 **Reproducible** | exact versions, thresholds and input checksums are stored with every subject |
+| **Triage, not strict QC** | Keeps healthy or repairable recordings, rejects only catastrophic ones, with a reason code for every decision |
+| **One command** | Single file, accepts numbers or ranges, downloads data automatically |
+| **Minimal disk use** | Each subject's data is deleted right after analysis; runs on free Colab |
+| **Resumable** | Re-run the same command after a crash; finished subjects are skipped |
+| **Complete output** | CSV tables, 15 figures, a report, a run manifest and one Excel summary |
+| **Reproducible** | Versions, thresholds and input checksums stored with every subject |
 
 > 📊 **The Excel file [`summary_all_subjects.xlsx`](summary_all_subjects.xlsx) contains the complete results for all 608 subjects.**
-> ✉️ **If you need the figures and all other output files of the script, e-mail me and I will share them: [alitaghi8305@gmail.com](mailto:alitaghi8305@gmail.com)** (see [Contact](#17-contact-and-full-outputs)).
+> 📧 **If you need the figures and all other output files of the script, e-mail me and I will share them: [alitaghi8305@gmail.com](mailto:alitaghi8305@gmail.com)** (see [Contact](#16--contact-and-full-outputs)).
 
 ---
 
-## Contents
+## 📋 Contents
 
-1. [The problem](#1-the-problem)
-2. [What the tool does](#2-what-the-tool-does)
-3. [The dataset](#3-the-dataset)
-4. [Installation](#4-installation)
-5. [Usage](#5-usage)
-6. [Which subjects are analysed (filters)](#6-which-subjects-are-analysed-filters)
-7. [How a recording is screened](#7-how-a-recording-is-screened)
-8. [Outputs](#8-outputs)
-9. [The Excel overview](#9-the-excel-overview)
-10. [Resuming, caching and disk space](#10-resuming-caching-and-disk-space)
-11. [Run it on Google Colab](#11-run-it-on-google-colab)
-12. [Reproducibility](#12-reproducibility)
-13. [Changing the thresholds](#13-changing-the-thresholds)
-14. [FAQ and troubleshooting](#14-faq-and-troubleshooting)
-15. [Limitations](#15-limitations)
-16. [Citation and license](#16-citation-and-license)
-17. [Contact and full outputs](#17-contact-and-full-outputs)
+1. [Overview](#1--overview)
+2. [The dataset](#2--the-dataset)
+3. [Installation](#3--installation)
+4. [Usage](#4--usage)
+5. [Which subjects are analysed (filters)](#5--which-subjects-are-analysed-filters)
+6. [How a recording is screened](#6--how-a-recording-is-screened)
+7. [Outputs](#7--outputs)
+8. [The Excel overview](#8--the-excel-overview)
+9. [Resuming, caching and disk space](#9--resuming-caching-and-disk-space)
+10. [Run it on Google Colab](#10--run-it-on-google-colab)
+11. [Reproducibility](#11--reproducibility)
+12. [Configuration and FAQ](#12--configuration-and-faq)
+13. [Limitations](#13--limitations)
+14. [Citation](#14--citation)
+15. [License](#15--license)
+16. [Contact and full outputs](#16--contact-and-full-outputs)
+17. [Author](#17--author)
 
 ---
 
-## 1. The problem
+## 1. 📌 Overview
 
 Large public EEG datasets contain recordings that are perfectly good, recordings that can easily be repaired, and a few that are truly broken. Before any real analysis you need a quick, reproducible answer to one question: **which recordings can I use?**
 
-* Looking at 608 participants with up to eight recordings each by eye is slow and subjective.
-* Strict automatic rules throw away good data. A recording should **not** be discarded only because
-  * the person is an *alpha non-responder* (a minority of healthy adults, roughly 10–15 %, show no strong alpha peak with closed eyes),
-  * the signal drifts because of sweat or skin impedance,
-  * there is 50 Hz mains noise (a notch filter removes it later),
-  * a handful of channels are bad (they can be interpolated).
+Looking at 608 participants with up to eight recordings each by eye is slow and subjective, and strict automatic rules throw away good data. A recording should **not** be discarded only because
+
+* the person is an *alpha non-responder* (a minority of healthy adults, roughly 10–15 %, show no strong alpha peak with closed eyes),
+* the signal drifts because of sweat or skin impedance,
+* there is 50 Hz mains noise (a notch filter removes it later),
+* a handful of channels are bad (they can be interpolated).
 
 This tool is a **triage**: it keeps everything that is healthy or repairable and rejects only what is catastrophic and cannot be rescued. Every decision is written down with a short reason code, so you can always see *why*.
-
-## 2. What the tool does
 
 For every subject you ask for, in this order:
 
 1. **Eligibility check** from the participant table that is embedded in the script. Subjects that are too old or have late triggers are rejected **before anything is downloaded**; the reason is saved in their status file.
-2. **Automatic download** of exactly the files that are needed (no need to have the data). Files that are already on disk are not downloaded again.
+2. **Automatic download** of exactly the files that are needed. Files already on disk are not downloaded again.
 3. **Quality screening** of every recording: header, channel integrity (flat, clipped, noisy, spatially uncorrelated), amplitude, spectrum (alpha, 50 Hz), consistency.
 4. **Results**: CSV tables, up to 15 figures including a channel-quality topomap, a text report, a machine-readable status and a run manifest.
 5. **Clean-up**: the analysed data are deleted, so the disk never fills up.
 
-After **every** subject the Excel overview of all subjects is updated. A crash, a lost connection or Ctrl+C never destroys finished work (see [section 10](#10-resuming-caching-and-disk-space)).
+After **every** subject the Excel overview of all subjects is updated. A crash, a lost connection or Ctrl+C never destroys finished work (see [section 9](#9--resuming-caching-and-disk-space)).
 
-## 3. The dataset
+---
+
+## 2. 📚 The dataset
 
 | | |
 |---|---|
@@ -102,28 +108,23 @@ File names follow BIDS, for example `sub-028/ses-1/eeg/sub-028_ses-1_task-EyesCl
 
 **About the version.** With DataLad (the default when it is installed) the script checks out the tag `1.0.3`, so you always get exactly that version. Every `status.txt` records the download method and, with DataLad, the tag and the Git commit that was used (sub-028 and sub-053: tag `1.0.3`, commit `6a558cd58525`; sub-325 was downloaded with the HTTPS fallback, which records no tag). With the plain HTTPS fallback it reads the newest snapshot on the server and prints a warning, because that is not guaranteed to be 1.0.3.
 
-## 4. Installation
+---
 
-Python **3.10 or newer** (developed and tested with 3.12).
+## 3. 🔧 Installation
+
+Requires Python **3.10 or newer** (developed and tested with 3.12).
 
 ```bash
 git clone https://github.com/alitkbbl/dortmund-vital-eeg-validator.git
 cd dortmund-vital-eeg-validator
-pip install -r requirements.txt
+pip install mne edfio numpy scipy pandas matplotlib openpyxl
 ```
 
-`requirements.txt` contains `mne`, `edfio`, `numpy`, `scipy`, `pandas`, `matplotlib` and `openpyxl` (for the Excel file).
+Data is downloaded automatically over HTTPS. To pin the exact dataset version 1.0.3, also install [DataLad](https://www.datalad.org/) and [git-annex](https://git-annex.branchable.com/install/); the script then uses them automatically (see `--download-method`).
 
-**Downloading.** The script needs one of these:
+---
 
-| Method | What you need | Notes |
-|---|---|---|
-| **DataLad** (default if found) | `pip install datalad` and [git-annex](https://git-annex.branchable.com/install/) | Pins the exact version 1.0.3. Easiest on Linux, macOS and WSL. |
-| **HTTPS** (`--download-method https`) | nothing extra | Simple, works everywhere, but takes the newest snapshot of the dataset. |
-
-`--download-method auto` (the default) uses DataLad if both `datalad` and `git-annex` are installed, otherwise HTTPS.
-
-## 5. Usage
+## 4. 🚀 Usage
 
 Type **numbers only** (no `sub-` needed). There are 608 subjects, numbered 1 to 608.
 
@@ -179,7 +180,9 @@ Every subject is shown in five steps (eligibility, download, analysis, saving, c
       ses-1  EC  post  PASS    USABLE_NEEDS_INTERPOLATION  bad: F3 (noisy+uncorrelated) | alpha EC/EO 9.8 | 50 Hz 16 dB
 ```
 
-## 6. Which subjects are analysed (filters)
+---
+
+## 5. 🎯 Which subjects are analysed (filters)
 
 The participant table of the dataset (age, completed sessions, late triggers) is **embedded in the script**, so a subject can be judged before a single byte is downloaded.
 
@@ -208,7 +211,9 @@ The reason for every rejection is written into that subject's `status.txt`, for 
 
 > 💡 Check that the embedded table matches your own copy of the participant file: `python qc_eeg_subject.py --verify-table participants.tsv` lists every difference. After a download the script also compares each subject's row with the dataset's own `participants.tsv` and warns about differences.
 
-## 7. How a recording is screened
+---
+
+## 6. 🔬 How a recording is screened
 
 Every recording passes five layers. Every finding carries a verdict and a short **reason code**.
 
@@ -231,7 +236,7 @@ Every recording passes five layers. Every finding carries a verdict and a short 
 
 1. **Alpha is only a FLAG.** A weak alpha peak or an Eyes Closed / Eyes Open ratio below 1 is common in healthy people. Codes: `LOW_ALPHA_PROMINENCE`, `WEAK_ALPHA_BLOCKING`, `NO_ALPHA_BLOCKING`. The only alpha-related FAIL is a **dead spectrum** (no signal power at all on O1, O2 and Oz) or a metadata error.
 2. **Slow drift does not fool the statistics.** Amplitude, variance, skewness, kurtosis and the spatial correlation are computed on a baseline-corrected **copy** of the signal (median removed, 0.5 Hz zero-phase high-pass), **in memory only**. Raw signals are never modified. Flat, clipping and frozen-sample checks and the DC-offset / drift numbers use the raw signal, because correcting it would hide saturation.
-3. **Spatial correlation finds bad channels that look normal.** Each channel's correlation (|Pearson r|, 1–45 Hz, 5-second windows) with the median of all channels is computed. A channel below **0.20** is counted as *uncorrelated / noisy* (this is the most data-dependent criterion, see [Limitations](#15-limitations)) (**0.18** for O1, O2 and Oz, because strong local occipital alpha lowers their correlation). *Safeguard:* if more than half of the channels fall below their threshold, the reference itself is not trusted: nobody is marked bad and the recording gets `FLAG LOW_GLOBAL_SPATIAL_CORRELATION`.
+3. **Spatial correlation finds bad channels that look normal.** Each channel's correlation (|Pearson r|, 1–45 Hz, 5-second windows) with the median of all channels is computed. A channel below **0.20** is counted as *uncorrelated / noisy* (this is the most data-dependent criterion, see [Limitations](#13--limitations)) (**0.18** for O1, O2 and Oz, because strong local occipital alpha lowers their correlation). *Safeguard:* if more than half of the channels fall below their threshold, the reference itself is not trusted: nobody is marked bad and the recording gets `FLAG LOW_GLOBAL_SPATIAL_CORRELATION`.
 4. **50 Hz line noise is not a FAIL.** Above 20 dB it is a `FLAG (LINE_NOISE)`, above 30 dB a `FLAG (HIGH_LINE_NOISE)`; a notch filter fixes it later. It becomes a FAIL only when it comes **with permanent saturation** (at least half of the channels clipped): `LINE_NOISE_SATURATION`.
 5. **Bad channels are judged by importance.** Cz, Fz, Pz, O1 and O2 are *critical channels*.
 
@@ -244,31 +249,15 @@ Every recording passes five layers. Every finding carries a verdict and a short 
 | 1 critical channel bad | ⚠️ FLAG (still usable after interpolation) | `CRITICAL_CHANNEL_BAD` |
 | **1 to 6** bad channels, at most one critical | ✅ **PASS**, label *needs interpolation* | `USABLE_NEEDS_INTERPOLATION` |
 
-### Labels
+### Labels and reason codes
 
-Every recording gets a label next to its verdict:
+Every recording gets one label next to its verdict: `USABLE`, `USABLE_WITH_FLAGS`, `USABLE_NEEDS_INTERPOLATION` or `REJECT`. A subject gets the most demanding label of its recordings, or **`PARTIALLY_USABLE`** when some recordings are usable and others are rejected (keep the usable ones).
 
-| Label | Meaning |
-|---|---|
-| `USABLE` | usable as it is |
-| `USABLE_WITH_FLAGS` | usable; flags (for example line noise, weak alpha) are worth a look |
-| `USABLE_NEEDS_INTERPOLATION` | usable after interpolating the bad channels |
-| `REJECT` | FAIL, not usable |
+The full list of reason codes and labels is in the [output guide](docs/output-guide.md) and in the `Legend` sheet of the Excel file. All thresholds live in the `CONFIG` dictionary at the top of the script ([section 12](#12--configuration-and-faq)).
 
-A **subject** gets the most demanding label of its recordings, or **`PARTIALLY_USABLE`** when some recordings are usable and others are rejected (keep the usable ones).
+---
 
-### Reason codes
-
-| Verdict | Codes |
-|---|---|
-| FAIL | `CRITICAL_CHANNELS_BAD`, `TOO_MANY_BAD_CHANNELS`, `RECORDING_FROZEN`, `AMPLITUDE_OUT_OF_RANGE`, `DEAD_SPECTRUM`, `LINE_NOISE_SATURATION`, `FILE_NOT_READABLE`, header and consistency errors |
-| FLAG | `CRITICAL_CHANNEL_BAD`, `LOW_GLOBAL_SPATIAL_CORRELATION`, `FROZEN_SEGMENT`, `HIGH_AMPLITUDE_CHANNELS`, `LINE_NOISE`, `HIGH_LINE_NOISE`, `LOW_ALPHA_PROMINENCE`, `WEAK_ALPHA_BLOCKING`, `NO_ALPHA_BLOCKING`, `ALPHA_RATIO_NOT_COMPUTED` |
-| PASS (note) | `USABLE_NEEDS_INTERPOLATION` |
-| MISSING | `RECORDING_MISSING` |
-
-All thresholds live in one place: the `CONFIG` dictionary at the top of the script ([section 13](#13-changing-the-thresholds)).
-
-## 8. Outputs
+## 7. 📦 Outputs
 
 Results go to `qc_output/` (change with `--out-root`):
 
@@ -325,7 +314,9 @@ qc_output/
 
 \* wall-clock time for one subject including download and clean-up. sub-028 and sub-053 were downloaded with DataLad, sub-325 with the HTTPS download.
 
-## 9. The Excel overview
+---
+
+## 8. 📊 The Excel overview
 
 📊 **[`summary_all_subjects.xlsx`](summary_all_subjects.xlsx)** in the root of this repository is the **complete automatic QC summary of all 608 subjects** (`sub-001` … `sub-608`), produced with QC logic version `screening-2.2`. **[`summary_all_subjects.csv`](summary_all_subjects.csv)** has the same content as the `Subjects` sheet. In every data sheet the rows are sorted by subject number. Subjects that were rejected before the download (age above 60 or late triggers) are listed with their basic information and the reason, but they were not QC-analysed.
 
@@ -360,7 +351,9 @@ One row per `FAIL`, `FLAG` or `MISSING` finding and per `PASS` note: subject, se
 
 > ℹ️ **Which sheets does the script write?** `qc_eeg_subject.py` writes `summary_all_subjects.xlsx` (and `.csv`) into your results folder with the data sheets **Subjects, Recordings, Issues and Legend**, and rebuilds the file from the subject folders after every subject, so it also contains subjects from earlier runs. The `Overview` dashboard and the `Recording_Ranking` sheet of the workbook in this repository were added on top of that output and are not written by the script. The file is written atomically (a half-written file never replaces a good one); if it is open in Excel on Windows, the script warns and updates it again after the next subject.
 
-## 10. Resuming, caching and disk space
+---
+
+## 9. 🔁 Resuming, caching and disk space
 
 ### Safe to stop at any time 🔁
 
@@ -386,11 +379,13 @@ If the download of a subject is incomplete, that subject is analysed with what a
 * Data are **kept** with `--keep-data`, with `--no-download` (your own files are never deleted), after an unexpected error, and when the download was incomplete.
 * Problems while deleting (permissions on Windows/WSL, locked git-annex files) only produce a warning; the analysis stays `COMPLETED` and the batch goes on.
 
-## 11. Run it on Google Colab
+---
 
-You do **not** need to own any data. The script downloads one subject, analyses it, saves the results, deletes the data and moves to the next one, so the Colab disk never fills up. The results are written to **Google Drive** and survive a disconnected runtime.
+## 10. 🌐 Run it on Google Colab
 
-**Cell 1: mount Drive and install** (once per session)
+You do **not** need to own any data. The script downloads one subject, analyses it, deletes the data and moves on, so the Colab disk never fills up.
+
+**Cell 1: mount Drive, install, get the script**
 
 ```python
 from google.colab import drive
@@ -399,46 +394,41 @@ drive.mount('/content/drive')
 
 ```bash
 !pip install -q "mne>=1.6" edfio openpyxl
-!wget -q -O qc_eeg_subject.py https://raw.githubusercontent.com/alitkbbl/dortmund-vital-eeg-validator/main/qc_eeg_subject.py
+!wget -q https://raw.githubusercontent.com/alitkbbl/dortmund-vital-eeg-validator/main/qc_eeg_subject.py
 ```
 
-**Cell 2: try one subject first**
+**Cell 2: run**
 
 ```bash
-!python qc_eeg_subject.py 28 --download-method https --data-dir /content/data --out-root /content/drive/MyDrive/dortmund_vital_qc
+!python qc_eeg_subject.py 1 to 608
 ```
 
-Check that `sub-028/` and `summary_all_subjects.xlsx` appear in `MyDrive/dortmund_vital_qc`.
-
-**Cell 3: all subjects**
+**Cell 3: copy the results to Drive**
 
 ```bash
-!python qc_eeg_subject.py 1 to 608 --download-method https --data-dir /content/data --out-root /content/drive/MyDrive/dortmund_vital_qc
+!rsync -avh --progress /content/qc_output/ /content/drive/MyDrive/qc_output/
 ```
 
-* Give the subject numbers on the command line; the interactive question `Subjects >` does not work in a notebook cell.
-* Keep `--data-dir` on `/content/data` (temporary disk) and only `--out-root` on Drive.
-* **Exact version 1.0.3:** `--download-method https` reads the newest snapshot. To pin version 1.0.3 use DataLad instead (run once before the command above):
+Run Cell 3 from time to time, and always before the session ends: files in `/content` are lost when the runtime disconnects. All 427 accepted subjects take roughly **10 hours**, so plan for more than one session.
 
-  ```bash
-  !apt-get -qq install -y git-annex > /dev/null
-  !pip install -q datalad
-  !git config --global user.name "colab" && git config --global user.email "colab@example.com"
-  !python qc_eeg_subject.py 1 to 608 --data-dir /content/data --repo-dir /content/ds005385_repo --out-root /content/drive/MyDrive/dortmund_vital_qc
-  ```
+📘 For writing results directly to Drive, resuming in a new session and pinning exact version 1.0.3 with DataLad, see the **[Colab guide](docs/colab.md)**.
 
-**How long does it take?** With the HTTPS download a subject with one session (four recordings) took **58 s** (`sub-325`); a two-session subject takes roughly twice as long, and with DataLad on a local computer the two-session examples took 174 s and 310 s. As a rough estimate (285 accepted subjects have one session, 142 have two) all 427 accepted subjects take on the order of **10 hours**, so plan for **one or more Colab sessions**. That is what the resume function is for: when a session stops, reconnect, run Cell 1 and then **the same command** again. Finished subjects are read from Drive and skipped, and the work continues where it stopped. Before closing the tab you can run `drive.flush_and_unmount()` to make sure everything is written.
+---
 
-## 12. Reproducibility
+## 11. 🧾 Reproducibility
 
 * `run_manifest.json` of every subject records the exact command line, the versions of Python, MNE, NumPy, SciPy, pandas and matplotlib, the dataset version and Git commit (DataLad), the complete `CONFIG`, the SHA-256 and size of every input file, the participant row used for the eligibility decision and the list of outputs.
 * There is no randomness anywhere in the analysis.
 * `QC_LOGIC_VERSION` and a fingerprint of `CONFIG` are stored with the results; results are only reused when both match.
 * Raw files are never modified; baseline correction exists only in memory.
 
-## 13. Changing the thresholds
+---
 
-Open `qc_eeg_subject.py` and edit the `CONFIG` dictionary near the top. Every threshold has a comment. The most relevant ones:
+## 12. 🔩 Configuration and FAQ
+
+### Changing the thresholds
+
+Open `qc_eeg_subject.py` and edit the `CONFIG` dictionary near the top. Every threshold has a comment. After editing, old results are re-analysed automatically because the `CONFIG` fingerprint changed.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -451,15 +441,15 @@ Open `qc_eeg_subject.py` and edit the `CONFIG` dictionary near the top. Every th
 | `line_flag_db`, `line_high_db` | 20, 30 | 50 Hz FLAG thresholds |
 | `typical_amp_min_uv`, `typical_amp_max_uv` | 1, 100 | physiological amplitude range |
 
-After editing, old results are re-analysed automatically the next time you run a subject, because the `CONFIG` fingerprint changed.
-
-## 14. FAQ and troubleshooting
+### FAQ
 
 **Why was a subject rejected without being downloaded?** Age above 60 or late triggers. Open that subject's `status.txt` for the exact reason.
 
 **What does `NO_DATA` mean?** None of the expected recordings could be analysed (missing in the dataset or the download failed). It is not treated as finished and will be tried again.
 
 **A recording is `FLAG` for alpha. Is it bad?** No. Weak alpha is common in healthy people and is only a flag.
+
+**How do I run everything again?** `python qc_eeg_subject.py 1 to 608 --force-reanalysis`.
 
 **`ModuleNotFoundError: edfio`** Run `pip install edfio`.
 
@@ -469,9 +459,9 @@ After editing, old results are re-analysed automatically the next time you run a
 
 **The Excel file is locked.** Close it in Excel. The script writes it again after the next subject.
 
-**How do I run everything again?** `python qc_eeg_subject.py 1 to 608 --force-reanalysis`.
+---
 
-## 15. Limitations
+## 13. 🚧 Limitations
 
 * This is a **first-pass screening**, not a replacement for expert review or a full preprocessing pipeline. The thresholds are practical heuristics and have **not** been validated against manual ratings. Check them on a few subjects of your own and adjust `CONFIG`.
 * The **spatial-correlation criterion is the most data-dependent one**. It compares each channel with the median of all channels, so referencing, the position of the reference electrode and frontal eye activity can lower the correlation of some channels (typically frontal and fronto-central ones) in many recordings of a subject. The built-in safeguard (`LOW_GLOBAL_SPATIAL_CORRELATION`) only covers the extreme case. Look at `corr_median` in `df_channels.csv` for the channels that are flagged again and again, and adjust `corr_threshold` / `corr_threshold_relaxed` if needed.
@@ -479,12 +469,21 @@ After editing, old results are re-analysed automatically the next time you run a
 * The electrode positions in the topomap come from MNE's standard templates (10-20, with 10-05 for the other channel names), not from individual digitisation.
 * The eligibility filters (age, late triggers) are project criteria, not statements about data quality.
 
-## 16. Citation and license
+---
 
-* Please cite the **dataset** and its paper (see the [dataset page](https://openneuro.org/datasets/ds005385/versions/1.0.3) for the exact reference and license terms): *Resting-state EEG data before and after cognitive activity across the adult lifespan and a 5-year follow-up*, Scientific Data (2024).
-* The code is released under the **MIT License** (see [`LICENSE`](LICENSE)).
+## 14. 📖 Citation
 
-## 17. Contact and full outputs
+Please cite the **dataset** and its paper (see the [dataset page](https://openneuro.org/datasets/ds005385/versions/1.0.3) for the exact reference and license terms): *Resting-state EEG data before and after cognitive activity across the adult lifespan and a 5-year follow-up*, Scientific Data (2024).
+
+---
+
+## 15. 📄 License
+
+Released under the [MIT License](LICENSE): free to use, modify and share, with attribution.
+
+---
+
+## 16. 📧 Contact and full outputs
 
 The repository contains
 
@@ -494,27 +493,15 @@ The repository contains
 
 The figures and the other per-subject files (CSV tables, reports, manifests) of the other subjects are not stored here because of their size.
 
-✉️ **Need them for all or for selected subjects? Send me an e-mail with the subject numbers and I will share them with you:**
+📧 **Need them for all or for selected subjects? Send me an e-mail with the subject numbers and I will share them with you:**
 
 **[alitaghi8305@gmail.com](mailto:alitaghi8305@gmail.com)**
 
 Questions, bug reports and suggestions are welcome as GitHub issues, too.
 
-## Repository layout
+---
 
-```text
-.
-├── qc_eeg_subject.py            the whole tool: one file
-├── requirements.txt
-├── summary_all_subjects.xlsx    complete QC summary of all 608 subjects (6 sheets)
-├── summary_all_subjects.csv     the "Subjects" sheet as CSV
-├── docs/
-│   ├── output-guide.md          every output file and figure of one subject explained
-│   └── excel-guide.md           every sheet and column of the Excel summary explained
-├── examples/
-│   ├── sub-028/                 two sessions, flagged subject (README shows all figures)
-│   ├── sub-053/                 two sessions, partially usable subject
-│   └── sub-325/                 session 1 only, clean subject
-├── LICENSE
-└── README.md
-```
+## 17. 👤 Author
+
+**Ali Taghizadeh**
+📧 [alitaghi8305@gmail.com](mailto:alitaghi8305@gmail.com) · [GitHub](https://github.com/alitkbbl)
