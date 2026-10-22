@@ -1,6 +1,12 @@
 # 🔍 Output guide: every file and figure explained
 
-The examples [`sub-028`](../examples/sub-028/README.md) and [`sub-053`](../examples/sub-053/README.md) contain the **unmodified output** of `python qc_eeg_subject.py 28` and `python qc_eeg_subject.py 53` ([OpenNeuro ds005385 v1.0.3](https://openneuro.org/datasets/ds005385/versions/1.0.3), both sessions, eight recordings each). A subject with only session 1 (four recordings, 11 figures) is shown in [`sub-325`](../examples/sub-325/README.md). This guide explains every file the script writes for one subject, using `sub-028` as the example. The project description is in the [root README](../README.md).
+This guide explains every file and figure generated for a single subject, using **`sub-028`** as the primary reference. For the broader project overview, see the [root README](../README.md).
+
+### 📁 Reference Examples
+The following examples contain the **unmodified output** from running `python qc_eeg_subject.py <ID>` on the [OpenNeuro ds005385 v1.0.3](https://openneuro.org/datasets/ds005385/versions/1.0.3) dataset:
+
+* **[`sub-028`](../examples/sub-028/README.md) & [`sub-053`](../examples/sub-053/README.md):** Full datasets with both sessions (8 recordings each).
+* **[`sub-325`](../examples/sub-325/README.md):** Single session only (Session 1: 4 recordings, 11 figures).
 
 **Contents**
 
