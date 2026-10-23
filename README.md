@@ -176,7 +176,6 @@ Every subject is shown in five steps (eligibility, download, analysis, saving, c
   Step 2/5  Data: download
     Source: OpenNeuro ds005385 v1.0.3  |  method: https  |  8 EDF file(s) to download
     ! HTTPS downloads the newest OpenNeuro snapshot, which is not guaranteed to be v1.0.3. Use DataLad for an exactly pinned version.
-    → participants.tsv cross-check: participants.tsv not found (check skipped)
 
   Step 3/5  Quality-control analysis
     ✔ 8 of 8 expected EDF files are on disk.
